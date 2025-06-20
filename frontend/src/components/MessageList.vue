@@ -1,22 +1,27 @@
 <template>
   <div class="w-full flex-1 overflow-auto p-4 space-y-2 flex flex-col">
-    <div
-      v-for="msg in messages"
-      :key="msg.timestamp + msg.id"
-      :class="[
-        'max-w-xs p-2 rounded flex flex-col',
-        msg.id === myId
-          ? 'bg-blue-500 text-white self-end'
-          : 'bg-gray-200 text-gray-900 self-start',
-      ]"
-      class="flex"
-    >
-      <div class="text-xs text-gray-300 mb-1 w-full" v-if="msg.id === myId">
-        {{ formatTime(msg.timestamp) }}
+    <template v-for="msg in messages" :key="msg.timestamp + msg.id">
+      <div v-if="msg.id === 'system'" class="text-center text-sm text-gray-400 italic">
+        {{ msg.text }}
       </div>
-      <div class="text-xs text-gray-500 mb-1 w-full" v-else>{{ formatTime(msg.timestamp) }}</div>
-      <div class="w-full">{{ msg.text }}</div>
-    </div>
+      <div
+        v-else
+        :class="[
+          'max-w-xs p-2 rounded flex flex-col',
+          msg.id === myId
+            ? 'bg-blue-500 text-white self-end'
+            : 'bg-gray-200 text-gray-900 self-start',
+        ]"
+      >
+        <div
+          class="text-xs mb-1 w-full"
+          :class="msg.id === myId ? 'text-gray-300' : 'text-gray-500'"
+        >
+          {{ formatTime(msg.timestamp) }}
+        </div>
+        <div class="w-full">{{ msg.text }}</div>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -26,7 +31,7 @@ import type { ChatMessage } from '@/stores/chat'
 
 const props = defineProps<{
   messages: ChatMessage[]
-  myId: string | number
+  myId: string
 }>()
 
 function formatTime(timestamp: number): string {

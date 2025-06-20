@@ -17,7 +17,6 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// Тип хранимых соединений с комнатами
 type RoomMap = Map<string, string>;
 const userRooms: RoomMap = new Map();
 
@@ -30,7 +29,6 @@ io.on("connection", (socket: Socket) => {
 
     console.log(`➡️ ${socket.id} joined room ${roomId}`);
 
-    // Уведомляем других участников
     socket.to(roomId).emit("system-message", {
       text: "Пользователь подключился",
       timestamp: Date.now(),
