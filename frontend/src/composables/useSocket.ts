@@ -21,7 +21,7 @@ export function useSocket(roomIdRef: Ref<string>) {
     return newId
   }
 
-  const myId = ref(getOrCreateUserId())
+  const myId = ref<String>(getOrCreateUserId())
 
   watch(
     roomIdRef,

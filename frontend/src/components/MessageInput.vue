@@ -23,19 +23,21 @@ function submit() {
 }
 </script>
 <template>
-  <div class="p-2 border-t border-gray-300 flex shadow">
+  <div
+    class="p-2 border-y bg-white border-gray-300 flex shadow fixed bottom-0 w-full container mx-auto"
+  >
     <input
       v-model="text"
       @keyup.enter="submit"
       type="text"
       placeholder="Сообщение…"
-      class="flex-1 rounded- px-3 py-2 focus:outline-none"
+      class="flex-1 rounded- px-3 py-3 my-2 focus:outline-none"
     />
     <Transition>
       <button
         @click="submit"
         v-if="text.length"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-lg"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 my-2 rounded-lg"
       >
         Отправить
       </button>

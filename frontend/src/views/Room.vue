@@ -33,22 +33,43 @@ watch(
 )
 </script>
 <template>
-  <div class="flex flex-col h-screen">
-    <MessageList :messages="messages" :myId="myId" />
-
-    <div class="p-2 flex items-center justify-between">
-      <button
-        v-if="!isChatEnded"
-        class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        @click="endChat"
-      >
-        Завершить чат
-      </button>
-
-      <p v-if="isChatEnded" class="text-red-600 font-semibold">Чат завершён</p>
-      <p v-else-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+  <div class="shadow-xl py-1 my-auto">
+    <div class="container">
+      <div class="flex items-center justify-between gap-5">
+        <div class="p-2 w-full flex items-center justify-between">
+          <div class="flex items-center my-2">
+            <p v-if="isChatEnded" class="text-red-600 font-semibold">Чат завершён</p>
+            <p v-else-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+          </div>
+          <button
+            v-if="!isChatEnded"
+            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            @click="endChat"
+          >
+            Завершить чат
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <MessageInput v-if="!isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
+  <div class="flex flex-col h-screen container">
+    <MessageList :messages="messages" :myId="myId" />
+    <Transition>
+      <MessageInput v-if="!isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: 0.1s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  transform: scale(0.5);
+  opacity: 0;
+}
+</style>

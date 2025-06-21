@@ -1,1 +1,13 @@
 @import 'tailwindcss';
+
+a,
+button {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.container {
+  max-width: clamp(20rem, 90%, 75rem);
+  margin-inline: auto;
+  padding: 0 1.25rem;
+}
