@@ -11,12 +11,11 @@ export function useSocket(roomIdRef: Ref<string>) {
   const isTyping = ref(false)
   let typingTimer: ReturnType<typeof setTimeout> | null = null
 
-  // Присоединение к комнате при изменении roomId
   watch(
     roomIdRef,
     (newRoomId, oldRoomId) => {
       if (oldRoomId) {
-        socket.emit('leave-room', oldRoomId) // нужно добавить обработку leave-room на сервере
+        socket.emit('leave-room', oldRoomId)
         chat.clearMessages()
       }
       if (newRoomId) {
@@ -30,7 +29,9 @@ export function useSocket(roomIdRef: Ref<string>) {
     myId.value = socket.id
   })
 
-  socket.on('receive-message', (msg) => chat.addMessage(msg))
+  socket.on('receive-message', (msg) => {
+    chat.addMessage(msg)
+  })
 
   socket.on('user-typing', () => {
     isTyping.value = true
@@ -41,7 +42,6 @@ export function useSocket(roomIdRef: Ref<string>) {
   })
 
   socket.on('system-message', (msg) => {
-    console.log('Получено системное сообщение:', msg) // для отладки
     chat.addMessage({
       id: 'system',
       text: msg.text,
@@ -49,8 +49,37 @@ export function useSocket(roomIdRef: Ref<string>) {
     })
   })
 
+  socket.on('message-read', ({ messageId }) => {
+    const index = chat.messages.findIndex((m) => m.timestamp === messageId)
+    if (index !== -1) {
+      // создаём новый объект, копируем поля + меняем статус
+      chat.messages[index] = {
+        ...chat.messages[index],
+        status: 'read',
+      }
+    }
+  })
+
   function sendMessage(text: string) {
-    socket.emit('send-message', { roomId: roomIdRef.value, message: text })
+    const timestamp = Date.now()
+    const msg = {
+      id: socket.id,
+      text,
+      timestamp,
+      status: 'sent',
+    }
+    socket.emit('send-message', {
+      roomId: roomIdRef.value,
+      message: text,
+      messageId: timestamp,
+    })
+  }
+
+  function markAsRead(messageId: number) {
+    socket.emit('read-message', {
+      roomId: roomIdRef.value,
+      messageId,
+    })
   }
 
   function notifyTyping() {
@@ -62,5 +91,14 @@ export function useSocket(roomIdRef: Ref<string>) {
     chat.clearMessages()
   })
 
-  return { messages: chat.messages, sendMessage, myId, notifyTyping, isTyping }
+  return {
+    messages: chat.messages,
+    sendMessage,
+    markAsRead,
+    myId,
+    someId: myId.value,
+    notifyTyping,
+    isTyping,
+    socket,
+  }
 }

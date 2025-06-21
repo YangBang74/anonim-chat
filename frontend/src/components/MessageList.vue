@@ -22,6 +22,9 @@
         >
           {{ formatTime(msg.timestamp) }}
         </div>
+        <div v-if="msg.id === myId" class="text-[10px] text-right mt-1">
+          {{ msg.status === 'read' ? 'Прочитано' : 'Отправлено' }}
+        </div>
       </div>
     </template>
   </div>
@@ -33,7 +36,7 @@ import type { ChatMessage } from '@/stores/chat'
 
 const props = defineProps<{
   messages: ChatMessage[]
-  myId: string
+  myId: unknown
 }>()
 
 const scrollContainer = ref<HTMLElement | null>(null)

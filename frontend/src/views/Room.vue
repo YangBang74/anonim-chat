@@ -8,14 +8,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import MessageList from '@/components/MessageList.vue'
 import MessageInput from '@/components/MessageInput.vue'
 
 const roomId = useRoute().params.id as string
-const some = ref(roomId)
+const roomIdRef = ref(roomId)
 
-const { messages, sendMessage, notifyTyping, isTyping, myId } = useSocket(some)
+const { messages, sendMessage, notifyTyping, isTyping, myId, markAsRead, someId } =
+  useSocket(roomIdRef)
+console.log('messages:', messages)
+
+watch(
+  () => {
+    const msgs = messages // без .value
+    return msgs.length > 0 ? msgs[msgs.length - 1] : null
+  },
+  (last) => {
+    if (!last) return
+    if (last.id === someId || last.status === 'read') return
+    markAsRead(last.timestamp)
+  },
+  { immediate: true },
+)
 </script>

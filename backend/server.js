@@ -39,7 +39,13 @@ io.on("connection", (socket) => {
       id: socket.id,
       text: message,
       timestamp: Date.now(),
+      status: "sent",
     });
+  });
+
+  socket.on("read-message", ({ roomId, messageId }) => {
+    // Оповестить всех в комнате, что сообщение прочитано
+    io.to(roomId).emit("message-read", { messageId });
   });
 
   socket.on("typing", (roomId) => {
