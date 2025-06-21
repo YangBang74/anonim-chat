@@ -69,7 +69,7 @@ const isOtherUserOnline = computed(() => {
             <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
           </div>
           <div>
-            <p v-if="isChatEnded" class="text-red-600 font-semibold">Чат завершён</p>
+            <p v-if="isChatEnded" class="text-red-600 font-semibold py-2">Чат завершён</p>
             <button
               v-if="!isChatEnded"
               class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"

@@ -86,7 +86,7 @@ export function useSocket(roomIdRef: Ref<string>) {
     if (typingTimer) clearTimeout(typingTimer)
     typingTimer = setTimeout(() => {
       isTyping.value = false
-    }, 1500)
+    }, 5000)
   })
 
   socket.on('system-message', (msg) => {
