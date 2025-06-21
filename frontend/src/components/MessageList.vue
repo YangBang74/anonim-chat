@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full flex-1 overflow-auto p-4 space-y-2 flex flex-col">
+  <div ref="scrollContainer" class="w-full flex-1 overflow-auto p-4 space-y-2 flex flex-col">
     <template v-for="msg in messages" :key="msg.timestamp + msg.id">
       <div v-if="msg.id === 'system'" class="text-center text-sm text-gray-400 italic">
         {{ msg.text }}
@@ -26,13 +26,26 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, onMounted, ref, watch, nextTick } from 'vue'
 import type { ChatMessage } from '@/stores/chat'
 
 const props = defineProps<{
   messages: ChatMessage[]
   myId: string
 }>()
+
+const scrollContainer = ref<HTMLElement | null>(null)
+
+function scrollToBottom() {
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.scrollTop = scrollContainer.value.scrollHeight
+    }
+  })
+}
+
+onMounted(scrollToBottom)
+watch(() => props.messages.length, scrollToBottom)
 
 function formatTime(timestamp: number): string {
   const now = Date.now()
