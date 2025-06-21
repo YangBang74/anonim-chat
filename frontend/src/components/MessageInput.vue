@@ -1,18 +1,3 @@
-<template>
-  <div class="p-4 border-t flex">
-    <input
-      v-model="text"
-      @keyup.enter="submit"
-      type="text"
-      placeholder="Введите сообщение…"
-      class="flex-1 border rounded-l px-3 py-2 focus:outline-none"
-    />
-    <button @click="submit" class="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-r">
-      Отправить
-    </button>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
@@ -37,3 +22,34 @@ function submit() {
   }
 }
 </script>
+<template>
+  <div class="p-2 border-t border-gray-300 flex shadow">
+    <input
+      v-model="text"
+      @keyup.enter="submit"
+      type="text"
+      placeholder="Сообщение…"
+      class="flex-1 rounded- px-3 py-2 focus:outline-none"
+    />
+    <Transition>
+      <button
+        @click="submit"
+        v-if="text.length"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 rounded-lg"
+      >
+        Отправить
+      </button>
+    </Transition>
+  </div>
+</template>
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+</style>
