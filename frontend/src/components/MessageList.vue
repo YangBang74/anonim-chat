@@ -33,12 +33,8 @@ function formatTime(timestamp: number): string {
     class="w-full flex-1 overflow-auto p-4 space-y-2 flex flex-col scrollbar-custom"
   >
     <template v-for="msg in messages" :key="msg.timestamp + msg.id">
-      <div v-if="msg.id === 'system'" class="text-center text-sm text-gray-400 italic">
-        {{ msg.text }}
-      </div>
-
       <div
-        v-else
+        v-if="msg.id != 'system'"
         :class="[
           'max-w-[75%] px-4 py-2 rounded-2xl flex flex-col relative',
           msg.id === myId

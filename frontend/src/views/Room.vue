@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import MessageList from '@/components/MessageList.vue'
 import MessageInput from '@/components/MessageInput.vue'
 
+const props = defineProps<{
+  id: string
+}>()
 const route = useRoute()
 const roomIdRef = ref(route.params.id as string)
 
-const { messages, sendMessage, markAsRead, myId, notifyTyping, isTyping, socket } =
-  useSocket(roomIdRef)
-console.log(socket)
+const {
+  messages,
+  sendMessage,
+  markAsRead,
+  myId,
+  notifyTyping,
+  isTyping,
+  socket,
+  endChat,
+  onlineUsers,
+} = useSocket(roomIdRef)
 
 const isChatEnded = ref(false)
 
@@ -18,9 +29,8 @@ socket.on('chat-ended', () => {
   isChatEnded.value = true
 })
 
-function endChat() {
-  console.log('Нажали завершить чат')
-  socket.emit('end-chat', roomIdRef.value)
+function handleEndChat() {
+  endChat()
 }
 
 watch(
@@ -31,23 +41,43 @@ watch(
   },
   { immediate: true },
 )
+
+const otherUserId = computed(() => {
+  return [...onlineUsers.value].find((id) => id !== myId.value)
+})
+
+const isOtherUserOnline = computed(() => {
+  return [...onlineUsers.value].some((id) => id !== myId.value)
+})
 </script>
 <template>
   <div class="shadow-xl py-1 my-auto">
     <div class="container">
       <div class="flex items-center justify-between gap-5">
         <div class="p-2 w-full flex items-center justify-between">
-          <div class="flex items-center my-2">
-            <p v-if="isChatEnded" class="text-red-600 font-semibold">Чат завершён</p>
-            <p v-else-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+          <div class="flex items-center my-2 gap-4">
+            <p
+              :class="{
+                'text-green-600': isOtherUserOnline,
+                'text-gray-400': !isOtherUserOnline,
+              }"
+              class="text-sm font-medium"
+            >
+              {{ isOtherUserOnline ? 'В сети' : 'Вне сети' }}
+            </p>
+
+            <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
           </div>
-          <button
-            v-if="!isChatEnded"
-            class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            @click="endChat"
-          >
-            Завершить чат
-          </button>
+          <div>
+            <p v-if="isChatEnded" class="text-red-600 font-semibold">Чат завершён</p>
+            <button
+              v-if="!isChatEnded"
+              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              @click="handleEndChat"
+            >
+              Завершить чат
+            </button>
+          </div>
         </div>
       </div>
     </div>

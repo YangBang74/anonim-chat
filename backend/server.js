@@ -18,15 +18,21 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 
 const userRooms = new Map();
+const onlineUsers = new Set();
 
 io.on("connection", (socket) => {
-  console.log(`🟢 User connected: ${socket.id}`);
+  const userId = socket.handshake.auth.userId;
+  console.log(`🟢 User connected: ${userId}`);
+
+  onlineUsers.add(userId);
+  socket.broadcast.emit("user-online", { userId });
 
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
-    userRooms.set(socket.id, roomId);
+    userRooms.set(socket.id, { roomId, userId });
 
-    console.log(`➡️ ${socket.id} joined room ${roomId}`);
+    // Отправляем подключившемуся клиенту список всех онлайн пользователей
+    socket.emit("online-users", Array.from(onlineUsers));
 
     socket.to(roomId).emit("system-message", {
       text: "Пользователь подключился",
@@ -34,22 +40,9 @@ io.on("connection", (socket) => {
     });
   });
 
-  io.use((socket, next) => {
-    const userId = socket.handshake.auth.userId;
-    if (userId) {
-      socket.id = userId;
-    }
-    next();
-  });
-
-  socket.on("end-chat", (roomId) => {
-    console.log(`❌ Chat ended by user ${socket.id} in room ${roomId}`);
-    io.to(roomId).emit("chat-ended");
-  });
-
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {
     io.to(roomId).emit("receive-message", {
-      id: senderId || socket.id,
+      id: senderId,
       text: message,
       timestamp: messageId,
       status: "sent",
@@ -61,20 +54,24 @@ io.on("connection", (socket) => {
   });
 
   socket.on("typing", (roomId) => {
-    socket.to(roomId).emit("user-typing", { id: socket.id });
+    socket.to(roomId).emit("user-typing", { id: userId });
+  });
+
+  socket.on("end-chat", (roomId) => {
+    io.to(roomId).emit("chat-ended");
   });
 
   socket.on("disconnect", () => {
-    const roomId = userRooms.get(socket.id);
-    if (roomId) {
-      socket.to(roomId).emit("system-message", {
-        text: "Пользователь отключился",
-        timestamp: Date.now(),
-      });
-      console.log(`🔴 ${socket.id} disconnected from ${roomId}`);
+    onlineUsers.delete(userId);
+
+    const info = userRooms.get(socket.id);
+    if (info) {
+      const { roomId, userId } = info;
+      socket.to(roomId).emit("user-offline", { userId });
       userRooms.delete(socket.id);
+      console.log(`🔴 ${userId} disconnected from ${roomId}`);
     } else {
-      console.log(`🔴 ${socket.id} disconnected (no room)`);
+      console.log("🔴 Unknown user disconnected");
     }
   });
 });

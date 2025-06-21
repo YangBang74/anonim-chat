@@ -17,7 +17,6 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   const myId = ref(getOrCreateUserId())
 
-  // Создаём socket с userId в auth
   const socket: Socket = io('http://localhost:3000', {
     auth: {
       userId: myId.value,
@@ -26,9 +25,10 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   const isTyping = ref(false)
   const isChatEnded = ref(false)
+  const onlineUsers = ref<Set<string>>(new Set())
+
   let typingTimer: ReturnType<typeof setTimeout> | null = null
 
-  // Следим за сменой комнаты
   watch(
     roomIdRef,
     (newRoomId, oldRoomId) => {
@@ -44,10 +44,6 @@ export function useSocket(roomIdRef: Ref<string>) {
     { immediate: true },
   )
 
-  socket.on('connect', () => {
-    console.log('✅ Connected with socket.id:', socket.id)
-  })
-
   function sendMessage(text: string) {
     const messageId = Date.now()
     socket.emit('send-message', {
@@ -58,8 +54,19 @@ export function useSocket(roomIdRef: Ref<string>) {
     })
   }
 
+  function markAsRead(messageId: number) {
+    socket.emit('read-message', {
+      roomId: roomIdRef.value,
+      messageId,
+    })
+  }
+
+  function notifyTyping() {
+    socket.emit('typing', roomIdRef.value)
+  }
+
   function endChat() {
-    localStorage.removeItem('user-id') // Удаляем ID
+    localStorage.removeItem('user-id')
     socket.emit('end-chat', roomIdRef.value)
   }
 
@@ -100,16 +107,20 @@ export function useSocket(roomIdRef: Ref<string>) {
     }
   })
 
-  function markAsRead(messageId: number) {
-    socket.emit('read-message', {
-      roomId: roomIdRef.value,
-      messageId,
-    })
-  }
+  socket.on('user-online', ({ userId }) => {
+    onlineUsers.value.add(userId)
+    console.log('Пользователь онлайн:', userId)
+  })
 
-  function notifyTyping() {
-    socket.emit('typing', roomIdRef.value)
-  }
+  socket.on('user-offline', ({ userId }) => {
+    onlineUsers.value.delete(userId)
+    console.log('Пользователь оффлайн:', userId)
+  })
+
+  socket.on('online-users', (users: string[]) => {
+    onlineUsers.value = new Set(users)
+    console.log('Список онлайн пользователей:', users)
+  })
 
   onBeforeUnmount(() => {
     socket.disconnect()
@@ -126,5 +137,6 @@ export function useSocket(roomIdRef: Ref<string>) {
     isTyping,
     isChatEnded,
     socket,
+    onlineUsers,
   }
 }
