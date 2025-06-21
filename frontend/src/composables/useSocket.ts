@@ -121,22 +121,39 @@ export function useSocket(roomIdRef: Ref<string>) {
     onlineUsers.value = new Set(users)
   })
 
-  socket.on('status-info', (data) => {
-    allUsers.value = data.onlineUsers
-    chattingUsers.value = data.chattingUsers
-    searchingUsers.value = data.searchingUsers
+  socket.on('status-info', ({ onlineUsers, chattingUsers: c, searchingUsers: s }) => {
+    allUsers.value = onlineUsers
+    chattingUsers.value = c
+    searchingUsers.value = s
   })
 
-  // ⚡ Запускаем автообновление при подключении
   socket.on('connect', () => {
     socket.emit('request-status')
-
     statusInterval = setInterval(() => {
       socket.emit('request-status')
     }, 3000)
   })
 
-  // Очищаем всё при завершении компонента
+  socket.on('online-users-in-room', (users: string[]) => {
+    chattingUsers.value = users
+  })
+
+  watch(
+    roomIdRef,
+    (newId, oldId) => {
+      if (oldId) {
+        socket.emit('leave-room', oldId)
+        chat.clearMessages()
+      }
+      if (newId) {
+        socket.emit('join-room', newId)
+        chat.setRoom(newId)
+        socket.emit('request-status')
+      }
+    },
+    { immediate: true },
+  )
+
   onBeforeUnmount(() => {
     if (statusInterval) clearInterval(statusInterval)
     socket.disconnect()

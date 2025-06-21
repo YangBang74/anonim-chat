@@ -21,60 +21,18 @@ const PORT = process.env.PORT || 3000;
 const userRooms = new Map();
 const onlineUsers = new Set();
 const waitingUsers = [];
-let roomCount = 1;
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.auth.userId;
   console.log(`🟢 User connected: ${userId}`);
 
   onlineUsers.add(userId);
-  socket.broadcast.emit("user-online", { userId });
-
-  socket.on("find-room", () => {
-    if (waitingUsers.length > 0) {
-      const { socket: peerSocket, userId: peerId } = waitingUsers.shift();
-
-      const newRoomId = uuidv4();
-      socket.join(newRoomId);
-      peerSocket.join(newRoomId);
-
-      userRooms.set(socket.id, { roomId: newRoomId, userId });
-      userRooms.set(peerSocket.id, { roomId: newRoomId, userId: peerId });
-
-      socket.emit("room-found", { roomId: newRoomId, peerId });
-      peerSocket.emit("room-found", { roomId: newRoomId, peerId: userId });
-
-      console.log(`✅ Match found: ${userId} & ${peerId} → ${newRoomId}`);
-    } else {
-      waitingUsers.push({ socket, userId });
-      socket.emit("waiting");
-      console.log(`⌛ ${userId} is waiting for chat...`);
-    }
-  });
-
-  socket.on("join-room", (roomId) => {
-    socket.join(roomId);
-    userRooms.set(socket.id, { roomId, userId });
-
-    const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
-    const usersInRoom = [];
-    for (const socketId of socketsInRoom) {
-      if (socketId !== socket.id) {
-        const info = userRooms.get(socketId);
-        if (info) usersInRoom.push(info.userId);
-      }
-    }
-
-    socket.emit("online-users", usersInRoom);
-    socket.to(roomId).emit("user-online", { userId });
-  });
 
   socket.on("request-status", () => {
     const chattingUsers = new Set();
-    for (const { userId } of userRooms.values()) {
-      chattingUsers.add(userId);
+    for (const { userId: uid } of userRooms.values()) {
+      chattingUsers.add(uid);
     }
-
     const searchingUsers = waitingUsers.map((u) => u.userId);
 
     socket.emit("status-info", {
@@ -82,6 +40,44 @@ io.on("connection", (socket) => {
       chattingUsers: Array.from(chattingUsers),
       searchingUsers,
     });
+  });
+
+  socket.on("find-room", () => {
+    if (waitingUsers.length > 0) {
+      const { socket: peerSocket, userId: peerId } = waitingUsers.shift();
+      const roomId = uuidv4();
+
+      socket.join(roomId);
+      peerSocket.join(roomId);
+
+      userRooms.set(socket.id, { roomId, userId });
+      userRooms.set(peerSocket.id, { roomId, userId: peerId });
+
+      socket.emit("room-found", { roomId, peerId });
+      peerSocket.emit("room-found", { roomId, peerId: userId });
+
+      console.log(`✅ Match: ${userId}↔${peerId} → ${roomId}`);
+    } else {
+      waitingUsers.push({ socket, userId });
+      socket.emit("waiting");
+      console.log(`⌛ ${userId} waiting`);
+    }
+  });
+
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    userRooms.set(socket.id, { roomId, userId });
+    const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
+    const usersInRoom = [];
+    for (const sockId of socketsInRoom) {
+      if (sockId !== socket.id) {
+        const info = userRooms.get(sockId);
+        if (info) usersInRoom.push(info.userId);
+      }
+    }
+
+    socket.emit("online-users-in-room", usersInRoom);
+    socket.to(roomId).emit("user-online", { userId });
   });
 
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {
@@ -107,17 +103,16 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     onlineUsers.delete(userId);
-
     const info = userRooms.get(socket.id);
     if (info) {
       const { roomId } = info;
       socket.to(roomId).emit("user-offline", { userId });
       userRooms.delete(socket.id);
-      console.log(`🔴 ${userId} disconnected from ${roomId}`);
+      console.log(`🔴 ${userId} left ${roomId}`);
     }
+    const idx = waitingUsers.findIndex((u) => u.userId === userId);
+    if (idx !== -1) waitingUsers.splice(idx, 1);
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`🚀 Server on ${PORT}`));
