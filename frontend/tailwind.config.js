@@ -1,5 +1,9 @@
-module.exports = {
+export default {
   content: ['./index.html', './src/**/*.{vue}'],
-  theme: { extend: {} },
-  plugins: [],
+  theme: {
+    extend: {},
+  },
+  plugins: [
+    require('tailwind-scrollbar'),
+  ],
 }

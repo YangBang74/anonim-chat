@@ -8,12 +8,10 @@ import MessageInput from '@/components/MessageInput.vue'
 const roomIdRef = ref(useRoute().params.id as string)
 const { messages, sendMessage, notifyTyping, isTyping, myId, markAsRead } = useSocket(roomIdRef)
 
-// 1. Отбираем только "чужие" сообщения, без системных
 const incomingMessages = computed(() =>
   messages.filter((m) => m.id !== myId.value && m.id !== 'system'),
 )
 
-// 2. Наблюдаем за последним из incomingMessages
 watch(
   () => incomingMessages.value[incomingMessages.value.length - 1],
   (last) => {
