@@ -29,6 +29,12 @@ export function useSocket(roomIdRef: Ref<string>) {
     myId.value = socket.id
   })
 
+  function sendMessage(text: string) {
+    const messageId = Date.now()
+    // chat.addMessage({ id: socket.id, text, timestamp: messageId, status: 'sent' })
+    socket.emit('send-message', { roomId: roomIdRef.value, message: text, messageId })
+  }
+
   socket.on('receive-message', (msg) => {
     if (!chat.messages.find((m) => m.timestamp === msg.timestamp)) {
       chat.addMessage(msg)
@@ -61,12 +67,6 @@ export function useSocket(roomIdRef: Ref<string>) {
       }
     }
   })
-
-  function sendMessage(text) {
-    const timestamp = Date.now()
-    chat.addMessage({ id: socket.id, text, timestamp, status: 'sent' })
-    socket.emit('send-message', { roomId: roomIdRef.value, message: text, messageId: timestamp })
-  }
 
   function markAsRead(messageId: number) {
     console.log('🔥 [CLIENT] Emitting read-message for', messageId)

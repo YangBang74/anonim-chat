@@ -34,11 +34,11 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("send-message", ({ roomId, message }) => {
+  socket.on("send-message", ({ roomId, message, messageId }) => {
     io.to(roomId).emit("receive-message", {
       id: socket.id,
       text: message,
-      timestamp: Date.now(),
+      timestamp: messageId, // Используем messageId от клиента
       status: "sent",
     });
   });
