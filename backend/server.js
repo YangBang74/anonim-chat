@@ -56,7 +56,6 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     userRooms.set(socket.id, { roomId, userId });
 
-    // Собираем список userId других пользователей в этой комнате, кроме текущего сокета
     const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
     const usersInRoom = [];
     for (const socketId of socketsInRoom) {
@@ -68,6 +67,21 @@ io.on("connection", (socket) => {
 
     socket.emit("online-users", usersInRoom);
     socket.to(roomId).emit("user-online", { userId });
+  });
+
+  socket.on("request-status", () => {
+    const chattingUsers = new Set();
+    for (const { userId } of userRooms.values()) {
+      chattingUsers.add(userId);
+    }
+
+    const searchingUsers = waitingUsers.map((u) => u.userId);
+
+    socket.emit("status-info", {
+      onlineUsers: Array.from(onlineUsers),
+      chattingUsers: Array.from(chattingUsers),
+      searchingUsers,
+    });
   });
 
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {

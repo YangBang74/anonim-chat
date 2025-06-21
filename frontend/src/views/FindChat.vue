@@ -1,5 +1,17 @@
 <template>
-  <div class="flex items-center justify-center h-screen">
+  <div class="flex items-center justify-center flex-col-reverse gap-10 h-screen">
+    <div class="p-4 border rounded shadow max-w-md mx-auto text-left">
+      <h2 class="text-xl font-bold mb-2">Состояние пользователей</h2>
+      <p>👥 Онлайн: {{ allUsers.length }}</p>
+      <p>💬 В чатах: {{ chattingUsers.length }}</p>
+      <p>⌛ В поиске: {{ searchingUsers.length }}</p>
+
+      <div class="mt-3 text-sm text-gray-600">
+        <p><b>Онлайн:</b> {{ allUsers.join(', ') }}</p>
+        <p><b>В чатах:</b> {{ chattingUsers.join(', ') }}</p>
+        <p><b>Ищут:</b> {{ searchingUsers.join(', ') }}</p>
+      </div>
+    </div>
     <div class="text-center space-y-6">
       <h1 class="text-3xl font-bold">Анонимный чат</h1>
       <p class="text-gray-500">Нажмите, чтобы найти собеседника</p>
@@ -21,6 +33,12 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { SocketService } from '@/composables/findRoom'
+import { useSocket } from '@/composables/useSocket'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const roomIdRef = ref(route.params.id as string)
+const { allUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
 
 const isSearching = ref(false)
 const errorMessage = ref('')

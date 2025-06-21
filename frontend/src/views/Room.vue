@@ -83,7 +83,7 @@ const isOtherUserOnline = computed(() => {
     </div>
   </div>
 
-  <div class="flex flex-col h-screen container">
+  <div class="flex flex-col h-full container">
     <MessageList :messages="messages" :myId="myId" />
     <Transition>
       <MessageInput :chatIsActive="isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />

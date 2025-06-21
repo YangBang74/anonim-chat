@@ -1,4 +1,4 @@
-import { ref, onBeforeUnmount, watch } from 'vue'
+import { ref, onBeforeUnmount, watch, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import { useChatStore } from '@/stores/chat'
@@ -6,7 +6,6 @@ import { useChatStore } from '@/stores/chat'
 export function useSocket(roomIdRef: Ref<string>) {
   const chat = useChatStore()
 
-  // Получаем или создаём userId
   function getOrCreateUserId(): string {
     const existingId = localStorage.getItem('user-id')
     if (existingId) return existingId
@@ -18,16 +17,17 @@ export function useSocket(roomIdRef: Ref<string>) {
   const myId = ref(getOrCreateUserId())
 
   const socket: Socket = io('http://localhost:3000', {
-    auth: {
-      userId: myId.value,
-    },
+    auth: { userId: myId.value },
   })
 
   const isTyping = ref(false)
   const isChatEnded = ref(false)
   const onlineUsers = ref<Set<string>>(new Set())
-
+  const allUsers = ref<string[]>([])
+  const chattingUsers = ref<string[]>([])
+  const searchingUsers = ref<string[]>([])
   let typingTimer: ReturnType<typeof setTimeout> | null = null
+  let statusInterval: ReturnType<typeof setInterval> | null = null
 
   watch(
     roomIdRef,
@@ -119,10 +119,26 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   socket.on('online-users', (users: string[]) => {
     onlineUsers.value = new Set(users)
-    console.log('Список онлайн пользователей:', users)
   })
 
+  socket.on('status-info', (data) => {
+    allUsers.value = data.onlineUsers
+    chattingUsers.value = data.chattingUsers
+    searchingUsers.value = data.searchingUsers
+  })
+
+  // ⚡ Запускаем автообновление при подключении
+  socket.on('connect', () => {
+    socket.emit('request-status')
+
+    statusInterval = setInterval(() => {
+      socket.emit('request-status')
+    }, 3000)
+  })
+
+  // Очищаем всё при завершении компонента
   onBeforeUnmount(() => {
+    if (statusInterval) clearInterval(statusInterval)
     socket.disconnect()
     chat.clearMessages()
   })
@@ -138,5 +154,8 @@ export function useSocket(roomIdRef: Ref<string>) {
     isChatEnded,
     socket,
     onlineUsers,
+    allUsers,
+    chattingUsers,
+    searchingUsers,
   }
 }
