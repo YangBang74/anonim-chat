@@ -45,11 +45,12 @@ function submit() {
 <style scoped>
 .v-enter-active,
 .v-leave-active {
-  transition: opacity 0.2s ease;
+  transition: 0.1s ease;
 }
 
 .v-enter-from,
 .v-leave-to {
+  transform: scale(0.5);
   opacity: 0;
 }
 </style>
