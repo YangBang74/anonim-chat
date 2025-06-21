@@ -1,32 +1,44 @@
+<template>
+  <div class="flex flex-col h-screen">
+    <!-- сообщения -->
+    <MessageList :messages="messages" :myId="myId" />
+
+    <div class="p-2 flex items-center justify-between">
+      <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" @click="endChat">
+        Завершить чат
+      </button>
+      <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+    </div>
+
+    <MessageInput @send="sendMessage" :onTyping="notifyTyping" />
+  </div>
+</template>
+
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
+import { ref, watch } from 'vue'
 import MessageList from '@/components/MessageList.vue'
 import MessageInput from '@/components/MessageInput.vue'
+import { useRoute } from 'vue-router'
 
-const roomIdRef = ref(useRoute().params.id as string)
-const { messages, sendMessage, notifyTyping, isTyping, myId, markAsRead } = useSocket(roomIdRef)
+const router = useRouter()
+const roomId = useRoute().params.id as string
+const roomIdRef = ref(roomId)
 
-const incomingMessages = computed(() =>
-  messages.filter((m) => m.id !== myId.value && m.id !== 'system'),
-)
+const { messages, sendMessage, markAsRead, myId, notifyTyping, isTyping } = useSocket(roomIdRef)
 
 watch(
-  () => incomingMessages.value[incomingMessages.value.length - 1],
+  () => messages[messages.length - 1],
   (last) => {
-    if (!last || last.status === 'read') return
-    console.log('🔥 markAsRead for', last.timestamp)
+    if (!last || last.id === myId.value || last.status === 'read') return
     markAsRead(last.timestamp)
   },
   { immediate: true },
 )
-</script>
 
-<template>
-  <div class="h-screen flex flex-col">
-    <MessageList :messages="messages" :myId="myId" />
-    <p v-if="isTyping" class="text-xs text-gray-400 px-4 pb-1">печатает…</p>
-    <MessageInput @send="sendMessage" :onTyping="notifyTyping" />
-  </div>
-</template>
+function endChat() {
+  localStorage.removeItem('user-id')
+  router.push('/') // можно направить обратно на главную
+}
+</script>

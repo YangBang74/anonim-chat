@@ -5,11 +5,23 @@ import { useChatStore } from '@/stores/chat'
 
 export function useSocket(roomIdRef: Ref<string>) {
   const chat = useChatStore()
+  chat.setRoom(roomIdRef.value)
+
   const socket: Socket = io('http://localhost:3000')
 
-  const myId = ref(socket.id)
   const isTyping = ref(false)
   let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+  function getOrCreateUserId() {
+    const existingId = localStorage.getItem('user-id')
+    if (existingId) return existingId
+
+    const newId = crypto.randomUUID()
+    localStorage.setItem('user-id', newId)
+    return newId
+  }
+
+  const myId = ref(getOrCreateUserId())
 
   watch(
     roomIdRef,
@@ -31,8 +43,12 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   function sendMessage(text: string) {
     const messageId = Date.now()
-    // chat.addMessage({ id: socket.id, text, timestamp: messageId, status: 'sent' })
-    socket.emit('send-message', { roomId: roomIdRef.value, message: text, messageId })
+    socket.emit('send-message', {
+      roomId: roomIdRef.value,
+      message: text,
+      messageId,
+      senderId: myId.value, // передаём отправителя
+    })
   }
 
   socket.on('receive-message', (msg) => {
@@ -60,7 +76,6 @@ export function useSocket(roomIdRef: Ref<string>) {
   socket.on('message-read', ({ messageId }) => {
     const index = chat.messages.findIndex((m) => m.timestamp === messageId)
     if (index !== -1) {
-      // создаём новый объект, копируем поля + меняем статус
       chat.messages[index] = {
         ...chat.messages[index],
         status: 'read',
