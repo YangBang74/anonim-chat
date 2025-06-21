@@ -5,6 +5,7 @@ import Room from '@/views/Room.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: Home },
+  { path: '/find', name: 'Find Chat', component: () => import('@/views/FindChat.vue') },
   { path: '/room/:id', name: 'Room', component: Room, props: true },
 ]
 
