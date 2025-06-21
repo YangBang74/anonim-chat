@@ -52,6 +52,24 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    userRooms.set(socket.id, { roomId, userId });
+
+    // Собираем список userId других пользователей в этой комнате, кроме текущего сокета
+    const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
+    const usersInRoom = [];
+    for (const socketId of socketsInRoom) {
+      if (socketId !== socket.id) {
+        const info = userRooms.get(socketId);
+        if (info) usersInRoom.push(info.userId);
+      }
+    }
+
+    socket.emit("online-users", usersInRoom);
+    socket.to(roomId).emit("user-online", { userId });
+  });
+
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {
     io.to(roomId).emit("receive-message", {
       id: senderId,
@@ -76,17 +94,12 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     onlineUsers.delete(userId);
 
-    const index = waitingUsers.findIndex((u) => u.userId === userId);
-    if (index !== -1) waitingUsers.splice(index, 1);
-
     const info = userRooms.get(socket.id);
     if (info) {
       const { roomId } = info;
       socket.to(roomId).emit("user-offline", { userId });
       userRooms.delete(socket.id);
       console.log(`🔴 ${userId} disconnected from ${roomId}`);
-    } else {
-      console.log(`🔴 Unknown user (${userId}) disconnected`);
     }
   });
 });
