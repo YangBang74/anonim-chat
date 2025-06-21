@@ -41,6 +41,17 @@ export function useSocket(roomIdRef: Ref<string>) {
     myId.value = socket.id
   })
 
+  function endChat() {
+    socket.emit('end-chat', roomIdRef.value)
+  }
+
+  const isChatEnded = ref(false)
+
+  socket.on('chat-ended', () => {
+    isChatEnded.value = true
+    chat.clearMessages() // можно очистить сообщения
+  })
+
   function sendMessage(text: string) {
     const messageId = Date.now()
     socket.emit('send-message', {
@@ -107,6 +118,7 @@ export function useSocket(roomIdRef: Ref<string>) {
     myId,
     someId: myId.value,
     notifyTyping,
+    endChat,
     isTyping,
     socket,
   }

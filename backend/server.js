@@ -34,6 +34,11 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("end-chat", (roomId) => {
+    console.log(`❌ Chat ended by user ${socket.id} in room ${roomId}`);
+    io.to(roomId).emit("chat-ended");
+  });
+
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {
     io.to(roomId).emit("receive-message", {
       id: senderId || socket.id,
