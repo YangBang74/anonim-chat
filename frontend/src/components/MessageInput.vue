@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 const props = defineProps<{
   onTyping?: () => void
+  chatIsActive: boolean
 }>()
 
 const emit = defineEmits<{
@@ -28,6 +29,7 @@ function submit() {
   >
     <input
       v-model="text"
+      :disabled="chatIsActive"
       @keyup.enter="submit"
       type="text"
       placeholder="Сообщение…"
@@ -36,8 +38,9 @@ function submit() {
     <Transition>
       <button
         @click="submit"
+        :disabled="chatIsActive"
         v-if="text.length"
-        class="bg-blue-500 hover:bg-blue-600 text-white px-4 my-2 rounded-lg"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 my-2 rounded-lg disabled:bg-gray-400"
       >
         Отправить
       </button>

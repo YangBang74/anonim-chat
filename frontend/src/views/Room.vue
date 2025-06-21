@@ -56,7 +56,7 @@ watch(
   <div class="flex flex-col h-screen container">
     <MessageList :messages="messages" :myId="myId" />
     <Transition>
-      <MessageInput v-if="!isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
+      <MessageInput :chatIsActive="isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
     </Transition>
   </div>
 </template>

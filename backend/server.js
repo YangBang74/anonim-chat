@@ -34,6 +34,14 @@ io.on("connection", (socket) => {
     });
   });
 
+  io.use((socket, next) => {
+    const userId = socket.handshake.auth.userId;
+    if (userId) {
+      socket.id = userId;
+    }
+    next();
+  });
+
   socket.on("end-chat", (roomId) => {
     console.log(`❌ Chat ended by user ${socket.id} in room ${roomId}`);
     io.to(roomId).emit("chat-ended");

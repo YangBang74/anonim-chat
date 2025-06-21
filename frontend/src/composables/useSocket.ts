@@ -5,24 +5,30 @@ import { useChatStore } from '@/stores/chat'
 
 export function useSocket(roomIdRef: Ref<string>) {
   const chat = useChatStore()
-  chat.setRoom(roomIdRef.value)
 
-  const socket: Socket = io('http://localhost:3000')
-
-  const isTyping = ref(false)
-  let typingTimer: ReturnType<typeof setTimeout> | null = null
-
-  function getOrCreateUserId() {
+  // Получаем или создаём userId
+  function getOrCreateUserId(): string {
     const existingId = localStorage.getItem('user-id')
     if (existingId) return existingId
-
     const newId = crypto.randomUUID()
     localStorage.setItem('user-id', newId)
     return newId
   }
 
-  const myId = ref<String>(getOrCreateUserId())
+  const myId = ref(getOrCreateUserId())
 
+  // Создаём socket с userId в auth
+  const socket: Socket = io('http://localhost:3000', {
+    auth: {
+      userId: myId.value,
+    },
+  })
+
+  const isTyping = ref(false)
+  const isChatEnded = ref(false)
+  let typingTimer: ReturnType<typeof setTimeout> | null = null
+
+  // Следим за сменой комнаты
   watch(
     roomIdRef,
     (newRoomId, oldRoomId) => {
@@ -32,24 +38,14 @@ export function useSocket(roomIdRef: Ref<string>) {
       }
       if (newRoomId) {
         socket.emit('join-room', newRoomId)
+        chat.setRoom(newRoomId)
       }
     },
     { immediate: true },
   )
 
   socket.on('connect', () => {
-    myId.value = socket.id
-  })
-
-  function endChat() {
-    socket.emit('end-chat', roomIdRef.value)
-  }
-
-  const isChatEnded = ref(false)
-
-  socket.on('chat-ended', () => {
-    isChatEnded.value = true
-    chat.clearMessages() // можно очистить сообщения
+    console.log('✅ Connected with socket.id:', socket.id)
   })
 
   function sendMessage(text: string) {
@@ -58,9 +54,19 @@ export function useSocket(roomIdRef: Ref<string>) {
       roomId: roomIdRef.value,
       message: text,
       messageId,
-      senderId: myId.value, // передаём отправителя
+      senderId: myId.value,
     })
   }
+
+  function endChat() {
+    localStorage.removeItem('user-id') // Удаляем ID
+    socket.emit('end-chat', roomIdRef.value)
+  }
+
+  socket.on('chat-ended', () => {
+    isChatEnded.value = true
+    chat.clearMessages()
+  })
 
   socket.on('receive-message', (msg) => {
     if (!chat.messages.find((m) => m.timestamp === msg.timestamp)) {
@@ -95,7 +101,6 @@ export function useSocket(roomIdRef: Ref<string>) {
   })
 
   function markAsRead(messageId: number) {
-    console.log('🔥 [CLIENT] Emitting read-message for', messageId)
     socket.emit('read-message', {
       roomId: roomIdRef.value,
       messageId,
@@ -116,10 +121,10 @@ export function useSocket(roomIdRef: Ref<string>) {
     sendMessage,
     markAsRead,
     myId,
-    someId: myId.value,
-    notifyTyping,
     endChat,
+    notifyTyping,
     isTyping,
+    isChatEnded,
     socket,
   }
 }
