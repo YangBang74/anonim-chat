@@ -2,9 +2,10 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export interface ChatMessage {
-  id: string
+  id: string // ID пользователя или 'system'
   text: string
   timestamp: number
+  messageId?: string // уникальный ID сообщения
   status?: 'sent' | 'read'
 }
 

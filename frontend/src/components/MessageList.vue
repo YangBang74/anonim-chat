@@ -24,6 +24,7 @@
         </div>
         <div v-if="msg.id === myId" class="text-[10px] text-right mt-1">
           {{ msg.status === 'read' ? 'Прочитано' : 'Отправлено' }}
+          {{ msg.status }}
         </div>
       </div>
     </template>
@@ -54,9 +55,6 @@ watch(() => props.messages.length, scrollToBottom)
 
 function formatTime(timestamp: number): string {
   const now = Date.now()
-  const diff = now - timestamp
-  const diffSeconds = Math.floor(diff / 1000)
-  const diffMinutes = Math.floor(diff / 60000)
 
   const date = new Date(timestamp)
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
