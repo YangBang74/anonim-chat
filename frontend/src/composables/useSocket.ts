@@ -1,4 +1,5 @@
 import { ref, onBeforeUnmount, watch } from 'vue'
+import type { Ref } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import { useChatStore } from '@/stores/chat'
 
@@ -11,15 +12,19 @@ export function useSocket(roomIdRef: Ref<string>) {
   let typingTimer: ReturnType<typeof setTimeout> | null = null
 
   // Присоединение к комнате при изменении roomId
-  watch(roomIdRef, (newRoomId, oldRoomId) => {
-    if (oldRoomId) {
-      socket.emit('leave-room', oldRoomId)  // нужно добавить обработку leave-room на сервере
-      chat.clearMessages()
-    }
-    if (newRoomId) {
-      socket.emit('join-room', newRoomId)
-    }
-  }, { immediate: true })
+  watch(
+    roomIdRef,
+    (newRoomId, oldRoomId) => {
+      if (oldRoomId) {
+        socket.emit('leave-room', oldRoomId) // нужно добавить обработку leave-room на сервере
+        chat.clearMessages()
+      }
+      if (newRoomId) {
+        socket.emit('join-room', newRoomId)
+      }
+    },
+    { immediate: true },
+  )
 
   socket.on('connect', () => {
     myId.value = socket.id
@@ -36,6 +41,7 @@ export function useSocket(roomIdRef: Ref<string>) {
   })
 
   socket.on('system-message', (msg) => {
+    console.log('Получено системное сообщение:', msg) // для отладки
     chat.addMessage({
       id: 'system',
       text: msg.text,

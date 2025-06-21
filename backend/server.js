@@ -1,6 +1,6 @@
 import express from "express";
 import http from "http";
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -17,13 +17,12 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-type RoomMap = Map<string, string>;
-const userRooms: RoomMap = new Map();
+const userRooms = new Map();
 
-io.on("connection", (socket: Socket) => {
+io.on("connection", (socket) => {
   console.log(`🟢 User connected: ${socket.id}`);
 
-  socket.on("join-room", (roomId: string) => {
+  socket.on("join-room", (roomId) => {
     socket.join(roomId);
     userRooms.set(socket.id, roomId);
 
@@ -35,18 +34,15 @@ io.on("connection", (socket: Socket) => {
     });
   });
 
-  socket.on(
-    "send-message",
-    ({ roomId, message }: { roomId: string; message: string }) => {
-      io.to(roomId).emit("receive-message", {
-        id: socket.id,
-        text: message,
-        timestamp: Date.now(),
-      });
-    }
-  );
+  socket.on("send-message", ({ roomId, message }) => {
+    io.to(roomId).emit("receive-message", {
+      id: socket.id,
+      text: message,
+      timestamp: Date.now(),
+    });
+  });
 
-  socket.on("typing", (roomId: string) => {
+  socket.on("typing", (roomId) => {
     socket.to(roomId).emit("user-typing", { id: socket.id });
   });
 
