@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 import Home from '@/views/Home.vue'
-import Room from '@/views/Room.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: Home, meta: { layout: 'default' } },
@@ -11,7 +10,20 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/FindChat.vue'),
     meta: { layout: 'default' },
   },
-  { path: '/room/:id', name: 'Room', component: Room, props: true, meta: { layout: 'default' } },
+  {
+    path: '/room/:id',
+    name: 'Room',
+    component: () => import('@/views/Room.vue'),
+    props: true,
+    meta: { layout: 'without' },
+  },
+  {
+    path: '/invite/:code',
+    name: 'Invite',
+    component: () => import('@/views/Invite.vue'),
+    props: true,
+    meta: { layout: 'default' },
+  },
 ]
 
 const router = createRouter({

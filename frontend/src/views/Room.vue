@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import MessageList from '@/components/MessageList.vue'
 import MessageInput from '@/components/MessageInput.vue'
-
+import without from '@/layouts/without.vue'
 const props = defineProps<{
   id: string
 }>()
@@ -51,44 +51,46 @@ const isOtherUserOnline = computed(() => {
 })
 </script>
 <template>
-  <div class="shadow-xl py-1 my-auto">
-    <div class="container">
-      <div class="flex items-center justify-between gap-5">
-        <div class="p-2 w-full flex items-center justify-between">
-          <div class="flex items-center my-2 gap-4">
-            <p
-              :class="{
-                'text-green-600': isOtherUserOnline,
-                'text-gray-400': !isOtherUserOnline,
-              }"
-              class="text-sm font-medium"
-            >
-              {{ isOtherUserOnline ? 'В сети' : 'Вне сети' }}
-            </p>
+  <without>
+    <div class="shadow-xl py-1 my-auto">
+      <div class="container">
+        <div class="flex items-center justify-between gap-5">
+          <div class="p-2 w-full flex items-center justify-between">
+            <div class="flex items-center my-2 gap-4">
+              <p
+                :class="{
+                  'text-green-600': isOtherUserOnline,
+                  'text-gray-400': !isOtherUserOnline,
+                }"
+                class="text-sm font-medium"
+              >
+                {{ isOtherUserOnline ? 'В сети' : 'Вне сети' }}
+              </p>
 
-            <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
-          </div>
-          <div>
-            <p v-if="isChatEnded" class="text-red-600 font-semibold py-2">Чат завершён</p>
-            <button
-              v-if="!isChatEnded"
-              class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              @click="handleEndChat"
-            >
-              Завершить чат
-            </button>
+              <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+            </div>
+            <div>
+              <p v-if="isChatEnded" class="text-red-600 font-semibold py-2">Чат завершён</p>
+              <button
+                v-if="!isChatEnded"
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                @click="handleEndChat"
+              >
+                Завершить чат
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="flex flex-col h-full container">
-    <MessageList :messages="messages" :myId="myId" />
-    <Transition>
-      <MessageInput :chatIsActive="isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
-    </Transition>
-  </div>
+    <div class="flex flex-col h-full container">
+      <MessageList :messages="messages" :myId="myId" />
+      <Transition>
+        <MessageInput :chatIsActive="isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
+      </Transition>
+    </div>
+  </without>
 </template>
 
 <style scoped>

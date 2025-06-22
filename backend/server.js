@@ -21,6 +21,7 @@ const PORT = process.env.PORT || 3000;
 const userRooms = new Map();
 const onlineUsers = new Set();
 const waitingUsers = [];
+const inviteLinks = new Map();
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.auth.userId;
@@ -45,7 +46,7 @@ io.on("connection", (socket) => {
   socket.on("find-room", () => {
     if (waitingUsers.length > 0) {
       const { socket: peerSocket, userId: peerId } = waitingUsers.shift();
-      const roomId = uuidv4();
+      const roomId = uuidv4().slice(0, 8);
 
       socket.join(roomId);
       peerSocket.join(roomId);
@@ -99,6 +100,40 @@ io.on("connection", (socket) => {
 
   socket.on("end-chat", (roomId) => {
     io.to(roomId).emit("chat-ended");
+  });
+
+  socket.on("create-invite", () => {
+    const inviteCode = uuidv4();
+    const roomId = uuidv4();
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 час
+
+    inviteLinks.set(inviteCode, { roomId, expiresAt });
+
+    socket.emit("invite-created", inviteCode);
+  });
+
+  socket.on("join-invite", (code) => {
+    const invite = inviteLinks.get(code);
+
+    if (!invite) {
+      return socket.emit("invite-error", "Приглашение не найдено.");
+    }
+
+    const now = Date.now();
+    if (invite.expiresAt < now) {
+      invites.delete(code);
+      return socket.emit("invite-error", "Срок действия ссылки истёк.");
+    }
+
+    const { roomId } = invite;
+    socket.join(roomId);
+    userRooms.set(socket.id, { roomId, userId });
+
+    socket.emit("room-found", { roomId });
+
+    socket.to(roomId).emit("user-online", { userId });
+
+    console.log(`🔗 ${userId} присоединился по ссылке: ${roomId}`);
   });
 
   socket.on("disconnect", () => {

@@ -3,29 +3,33 @@ import { RouterLink } from 'vue-router'
 </script>
 
 <template>
-  <div class="layout flex flex-col justify-between h-full">
-    <header class="shadow-lg">
-      <div class="container">
-        <div class="flex items-center justify-between">
-          <RouterLink to="/" class="font-bold text-xl py-4">Анонимная</RouterLink>
-          <div class="flex items-center justify-end gap-4">
-            <RouterLink
-              to="/find"
-              class="bg-blue-600 text-white py-2 px-4 rounded-xl font-medium shadow-lg shadow-blue-800/20 my-4"
-              >Начать</RouterLink
-            >
-            <RouterLink
-              to="/"
-              class="bg-purple-600 text-white py-2 px-4 rounded-xl font-medium shadow-lg shadow-purple-800/20 my-4"
-              >Войти</RouterLink
-            >
-          </div>
-        </div>
+  <div class="layout min-h-screen flex flex-col">
+    <header class="border-b border-gray-200 bg-white">
+      <div class="container mx-auto px-4 py-4 flex items-center justify-between">
+        <RouterLink to="/" class="text-2xl font-semibold text-gray-800 py-4">Анонимная</RouterLink>
+        <nav class="flex gap-3">
+          <RouterLink
+            to="/find"
+            class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
+          >
+            Начать
+          </RouterLink>
+          <RouterLink
+            to="/"
+            class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+          >
+            Войти
+          </RouterLink>
+        </nav>
       </div>
     </header>
+
     <main class="flex-1">
       <slot></slot>
     </main>
-    <footer></footer>
+
+    <footer class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
+      © {{ new Date().getFullYear() }} Анонимный чат
+    </footer>
   </div>
 </template>
