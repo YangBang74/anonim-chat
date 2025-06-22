@@ -1,3 +1,68 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useSocket } from '@/composables/useSocket'
+import { Copy, CopyCheck } from 'lucide-vue-next'
+
+const roomIdRef = ref<string>('')
+const { socket, allOnlineUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
+
+const isSearching = ref(false)
+const isCreatingInvite = ref(false)
+const inviteLink = ref('')
+const errorMessage = ref('')
+const inviteError = ref('')
+const router = useRouter()
+const copied = ref(false)
+
+function startSearch() {
+  errorMessage.value = ''
+  isSearching.value = true
+  socket.emit('find-room')
+}
+
+function createInvite() {
+  inviteError.value = ''
+  inviteLink.value = ''
+  isCreatingInvite.value = true
+  copied.value = false
+  socket.emit('create-invite')
+}
+
+function copyInviteLink() {
+  navigator.clipboard.writeText(inviteLink.value).then(() => {
+    copied.value = true
+    setTimeout(() => {
+      copied.value = false
+    }, 2000)
+  })
+}
+
+socket.on('room-found', ({ roomId }) => {
+  isSearching.value = false
+  router.push(`/room/${roomId}`)
+})
+
+socket.on('waiting', () => {
+  isSearching.value = true
+})
+
+socket.on('error', (msg: string) => {
+  errorMessage.value = msg
+  isSearching.value = false
+})
+
+socket.on('invite-created', (code: string) => {
+  inviteLink.value = `${window.location.origin}/invite/${code}`
+  isCreatingInvite.value = false
+})
+
+socket.on('invite-error', (msg: string) => {
+  inviteError.value = msg
+  isCreatingInvite.value = false
+})
+</script>
+
 <template>
   <div class="flex items-center justify-center flex-col-reverse gap-10 h-screen bg-gray-50">
     <div class="p-4 border rounded shadow-md max-w-md mx-auto text-left bg-white">
@@ -34,77 +99,35 @@
           <p class="text-gray-500">Создайте приватную комнату и отправьте ссылку другу</p>
         </div>
 
+        <div v-if="inviteLink" class="h-10">
+          <div class="flex items-stretch justify-between bg-gray-100 rounded-md">
+            <p class="text-sm text-green-700 break-all mr-2 px-2 py-2">
+              <RouterLink
+                :to="inviteLink"
+                target="_blank"
+                class="underline hover:text-green-800 line-clamp-1 overflow-hidden"
+                >{{ inviteLink }}</RouterLink
+              >
+            </p>
+            <button
+              @click="copyInviteLink"
+              class="bg-gray-300 hover:bg-gray-400 aspect-[1/1] h-full text-gray-800 font-bold py-2 px-2 rounded text-sm"
+            >
+              <Copy v-if="!copied" />
+              <CopyCheck v-else />
+            </button>
+          </div>
+          <p v-if="inviteError" class="text-red-500">{{ inviteError }}</p>
+        </div>
         <button
+          v-else
           @click="createInvite"
           :disabled="isCreatingInvite"
           class="bg-green-600 text-white mt-auto px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-all"
         >
           {{ isCreatingInvite ? 'Создание...' : 'Создать ссылку' }}
         </button>
-
-        <div v-if="inviteLink" class="h-10">
-          <p class="text-sm text-green-700 break-all">
-            Скопируйте ссылку:
-            <a :href="inviteLink" target="_blank" class="underline hover:text-green-800">{{
-              inviteLink
-            }}</a>
-          </p>
-          <p v-if="inviteError" class="text-red-500">{{ inviteError }}</p>
-        </div>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useSocket } from '@/composables/useSocket'
-
-const roomIdRef = ref<string>('')
-const { socket, allOnlineUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
-
-const isSearching = ref(false)
-const isCreatingInvite = ref(false)
-const inviteLink = ref('')
-const errorMessage = ref('')
-const inviteError = ref('')
-const router = useRouter()
-
-function startSearch() {
-  errorMessage.value = ''
-  isSearching.value = true
-  socket.emit('find-room')
-}
-
-function createInvite() {
-  inviteError.value = ''
-  inviteLink.value = ''
-  isCreatingInvite.value = true
-  socket.emit('create-invite')
-}
-
-socket.on('room-found', ({ roomId }) => {
-  isSearching.value = false
-  router.push(`/room/${roomId}`)
-})
-
-socket.on('waiting', () => {
-  isSearching.value = true
-})
-
-socket.on('error', (msg: string) => {
-  errorMessage.value = msg
-  isSearching.value = false
-})
-
-socket.on('invite-created', (code: string) => {
-  inviteLink.value = `${window.location.origin}/invite/${code}`
-  isCreatingInvite.value = false
-})
-
-socket.on('invite-error', (msg: string) => {
-  inviteError.value = msg
-  isCreatingInvite.value = false
-})
-</script>
