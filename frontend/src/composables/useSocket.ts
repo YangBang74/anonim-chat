@@ -2,6 +2,7 @@ import { ref, onBeforeUnmount, watch, onMounted } from 'vue'
 import type { Ref } from 'vue'
 import { io, type Socket } from 'socket.io-client'
 import { useChatStore } from '@/stores/chat'
+import router from '@/router'
 
 export function useSocket(roomIdRef: Ref<string>) {
   const chat = useChatStore()
@@ -22,12 +23,19 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   const isTyping = ref(false)
   const isChatEnded = ref(false)
-  const onlineUsers = ref<Set<string>>(new Set())
-  const allUsers = ref<string[]>([])
+  const onlineUsersInRoom = ref(new Set<string>())
+
+  const allOnlineUsers = ref<string[]>([])
   const chattingUsers = ref<string[]>([])
   const searchingUsers = ref<string[]>([])
+
   let typingTimer: ReturnType<typeof setTimeout> | null = null
-  let statusInterval: ReturnType<typeof setInterval> | null = null
+
+  function cleanup() {
+    if (typingTimer) clearTimeout(typingTimer)
+    socket.disconnect()
+    chat.clearMessages()
+  }
 
   watch(
     roomIdRef,
@@ -35,8 +43,10 @@ export function useSocket(roomIdRef: Ref<string>) {
       if (oldRoomId) {
         socket.emit('leave-room', oldRoomId)
         chat.clearMessages()
+        onlineUsersInRoom.value.clear()
       }
       if (newRoomId) {
+        isChatEnded.value = false
         socket.emit('join-room', newRoomId)
         chat.setRoom(newRoomId)
       }
@@ -66,113 +76,98 @@ export function useSocket(roomIdRef: Ref<string>) {
   }
 
   function endChat() {
-    localStorage.removeItem('user-id')
+    // localStorage.removeItem('user-id')
     socket.emit('end-chat', roomIdRef.value)
   }
 
-  socket.on('chat-ended', () => {
-    isChatEnded.value = true
-    chat.clearMessages()
-  })
-
-  socket.on('receive-message', (msg) => {
-    if (!chat.messages.find((m) => m.timestamp === msg.timestamp)) {
-      chat.addMessage(msg)
-    }
-  })
-
-  socket.on('user-typing', () => {
-    isTyping.value = true
-    if (typingTimer) clearTimeout(typingTimer)
-    typingTimer = setTimeout(() => {
-      isTyping.value = false
-    }, 5000)
-  })
-
-  socket.on('system-message', (msg) => {
-    chat.addMessage({
-      id: 'system',
-      text: msg.text,
-      timestamp: msg.timestamp,
+  onMounted(() => {
+    socket.on('chat-ended', () => {
+      isChatEnded.value = true
+      chat.clearMessages()
+      setTimeout(() => {
+        router.push('/find')
+      }, 3000)
     })
-  })
 
-  socket.on('message-read', ({ messageId }) => {
-    const index = chat.messages.findIndex((m) => m.timestamp === messageId)
-    if (index !== -1) {
-      chat.messages[index] = {
-        ...chat.messages[index],
-        status: 'read',
+    socket.on('receive-message', (msg) => {
+      if (!chat.messages.find((m) => m.timestamp === msg.timestamp)) {
+        chat.addMessage(msg)
       }
-    }
-  })
+    })
 
-  socket.on('user-online', ({ userId }) => {
-    onlineUsers.value.add(userId)
-    console.log('Пользователь онлайн:', userId)
-  })
+    socket.on('user-typing', () => {
+      isTyping.value = true
+      if (typingTimer) clearTimeout(typingTimer)
+      typingTimer = setTimeout(() => {
+        isTyping.value = false
+      }, 5000)
+    })
 
-  socket.on('user-offline', ({ userId }) => {
-    onlineUsers.value.delete(userId)
-    console.log('Пользователь оффлайн:', userId)
-  })
+    socket.on('system-message', (msg) => {
+      chat.addMessage({
+        id: 'system',
+        text: msg.text,
+        timestamp: msg.timestamp,
+      })
+    })
 
-  socket.on('online-users', (users: string[]) => {
-    onlineUsers.value = new Set(users)
-  })
-
-  socket.on('status-info', ({ onlineUsers, chattingUsers: c, searchingUsers: s }) => {
-    allUsers.value = onlineUsers
-    chattingUsers.value = c
-    searchingUsers.value = s
-  })
-
-  socket.on('connect', () => {
-    socket.emit('request-status')
-    statusInterval = setInterval(() => {
-      socket.emit('request-status')
-    }, 3000)
-  })
-
-  socket.on('online-users-in-room', (users: string[]) => {
-    chattingUsers.value = users
-  })
-
-  watch(
-    roomIdRef,
-    (newId, oldId) => {
-      if (oldId) {
-        socket.emit('leave-room', oldId)
-        chat.clearMessages()
+    socket.on('message-read', ({ messageId }) => {
+      const index = chat.messages.findIndex((m) => m.timestamp === messageId)
+      if (index !== -1) {
+        chat.messages[index] = {
+          ...chat.messages[index],
+          status: 'read',
+        }
       }
-      if (newId) {
-        socket.emit('join-room', newId)
-        chat.setRoom(newId)
-        socket.emit('request-status')
-      }
-    },
-    { immediate: true },
-  )
+    })
+
+    socket.on('online-users-in-room', (users: string[]) => {
+      onlineUsersInRoom.value = new Set(users)
+    })
+
+    socket.on('user-online', ({ userId }) => {
+      onlineUsersInRoom.value.add(userId)
+    })
+
+    socket.on('user-offline', ({ userId }) => {
+      onlineUsersInRoom.value.delete(userId)
+    })
+
+    socket.on('status-update', ({ onlineUsers, chattingUsers: c, searchingUsers: s }) => {
+      allOnlineUsers.value = onlineUsers
+      chattingUsers.value = c
+      searchingUsers.value = s
+    })
+
+    // socket.on('connect', () => {
+    //   socket.emit('request-status')
+    //   if (statusInterval) clearInterval(statusInterval)
+    //   statusInterval = setInterval(() => {
+    //     socket.emit('request-status')
+    //   }, 3000)
+    // })
+  })
 
   onBeforeUnmount(() => {
-    if (statusInterval) clearInterval(statusInterval)
-    socket.disconnect()
-    chat.clearMessages()
+    cleanup()
   })
 
   return {
+    // Состояния
     messages: chat.messages,
-    sendMessage,
-    markAsRead,
     myId,
-    endChat,
-    notifyTyping,
     isTyping,
     isChatEnded,
-    socket,
-    onlineUsers,
-    allUsers,
+    onlineUsersInRoom,
+    allOnlineUsers,
     chattingUsers,
     searchingUsers,
+    socket,
+
+    // Методы
+    sendMessage,
+    markAsRead,
+    endChat,
+    notifyTyping,
   }
 }

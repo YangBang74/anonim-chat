@@ -5,12 +5,12 @@ import { useSocket } from '@/composables/useSocket'
 import MessageList from '@/components/MessageList.vue'
 import MessageInput from '@/components/MessageInput.vue'
 import without from '@/layouts/without.vue'
-const props = defineProps<{
-  id: string
-}>()
-const route = useRoute()
-const roomIdRef = ref(route.params.id as string)
 
+const route = useRoute()
+// Убедимся, что roomIdRef всегда строка, даже если параметр пуст
+const roomIdRef = ref((route.params.id as string) || '')
+
+// Деструктуризация с исправленными и понятными именами из composable
 const {
   messages,
   sendMessage,
@@ -18,38 +18,42 @@ const {
   myId,
   notifyTyping,
   isTyping,
-  socket,
   endChat,
-  onlineUsers,
+  isChatEnded, // Состояние берется напрямую из composable
+  onlineUsersInRoom, // Пользователи онлайн в текущей комнате
 } = useSocket(roomIdRef)
 
-const isChatEnded = ref(false)
-
-socket.on('chat-ended', () => {
-  isChatEnded.value = true
-})
-
+// Функция для вызова метода `endChat` из composable
 function handleEndChat() {
   endChat()
 }
 
+// Watcher для пометки входящих сообщений как прочитанных
 watch(
-  () => messages[messages.length - 1],
-  (last) => {
-    if (!last || last.id === myId.value || last.status === 'read') return
-    markAsRead(last.timestamp)
+  () => (messages.length > 0 ? messages[messages.length - 1] : null),
+  (lastMessage) => {
+    // Проверяем, что сообщение существует, оно не от меня и еще не прочитано
+    if (!lastMessage || lastMessage.id === myId.value || lastMessage.status === 'read') {
+      return
+    }
+    markAsRead(lastMessage.timestamp)
   },
-  { immediate: true },
+  { immediate: true, deep: true }, // deep: true на случай изменения статуса
 )
 
+// Computed-свойство для определения ID собеседника
 const otherUserId = computed(() => {
-  return [...onlineUsers.value].find((id) => id !== myId.value)
+  // Находим первого пользователя в комнате, который не является мной
+  return [...onlineUsersInRoom.value].find((id) => id !== myId.value)
 })
 
+// Computed-свойство для проверки, онлайн ли собеседник
 const isOtherUserOnline = computed(() => {
-  return [...onlineUsers.value].some((id) => id !== myId.value)
+  // Проверяем, есть ли в комнате кто-то кроме меня
+  return [...onlineUsersInRoom.value].some((id) => id !== myId.value)
 })
 </script>
+
 <template>
   <without>
     <div class="shadow-xl py-1 my-auto">
@@ -62,18 +66,19 @@ const isOtherUserOnline = computed(() => {
                   'text-green-600': isOtherUserOnline,
                   'text-gray-400': !isOtherUserOnline,
                 }"
-                class="text-sm font-medium"
+                class="text-sm font-medium transition-colors duration-300"
               >
                 {{ isOtherUserOnline ? 'В сети' : 'Вне сети' }}
               </p>
-
-              <p v-if="isTyping" class="text-sm text-gray-400">печатает…</p>
+              <p v-if="isTyping && isOtherUserOnline" class="text-sm text-gray-400 animate-pulse">
+                печатает…
+              </p>
             </div>
             <div>
               <p v-if="isChatEnded" class="text-red-600 font-semibold py-2">Чат завершён</p>
               <button
                 v-if="!isChatEnded"
-                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                 @click="handleEndChat"
               >
                 Завершить чат
@@ -86,22 +91,27 @@ const isOtherUserOnline = computed(() => {
 
     <div class="flex flex-col h-full container">
       <MessageList :messages="messages" :myId="myId" />
-      <Transition>
-        <MessageInput :chatIsActive="isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
+
+      <Transition name="fade">
+        <MessageInput v-if="!isChatEnded" @send="sendMessage" :onTyping="notifyTyping" />
       </Transition>
     </div>
   </without>
 </template>
 
 <style scoped>
-.v-enter-active,
-.v-leave-active {
-  transition: 0.1s ease;
+/* Стили для анимации поля ввода */
+.fade-enter-active,
+.fade-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
-.v-enter-from,
-.v-leave-to {
-  transform: scale(0.5);
+.fade-enter-from,
+.fade-leave-to {
+  transform: translateY(20px);
   opacity: 0;
 }
 </style>
+```

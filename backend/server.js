@@ -19,21 +19,27 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 3000;
 
 const userRooms = new Map();
+const userSockets = new Map();
 const onlineUsers = new Set();
 const waitingUsers = [];
 const inviteLinks = new Map();
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.auth.userId;
-  console.log(`🟢 User connected: ${userId}`);
+  console.log(`🟢 Connected: ${userId}`);
 
-  onlineUsers.add(userId);
+  if (!userSockets.has(userId)) {
+    userSockets.set(userId, new Set());
+    onlineUsers.add(userId);
+  }
+  userSockets.get(userId).add(socket.id);
 
   socket.on("request-status", () => {
     const chattingUsers = new Set();
     for (const { userId: uid } of userRooms.values()) {
       chattingUsers.add(uid);
     }
+
     const searchingUsers = waitingUsers.map((u) => u.userId);
 
     socket.emit("status-info", {
@@ -57,7 +63,7 @@ io.on("connection", (socket) => {
       socket.emit("room-found", { roomId, peerId });
       peerSocket.emit("room-found", { roomId, peerId: userId });
 
-      console.log(`✅ Match: ${userId}↔${peerId} → ${roomId}`);
+      console.log(`✅ Match: ${userId} ↔ ${peerId} → ${roomId}`);
     } else {
       waitingUsers.push({ socket, userId });
       socket.emit("waiting");
@@ -68,6 +74,7 @@ io.on("connection", (socket) => {
   socket.on("join-room", (roomId) => {
     socket.join(roomId);
     userRooms.set(socket.id, { roomId, userId });
+
     const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
     const usersInRoom = [];
     for (const sockId of socketsInRoom) {
@@ -103,13 +110,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("create-invite", () => {
-    const inviteCode = uuidv4();
-    const roomId = uuidv4();
+    const inviteCode = uuidv4().slice(0, 8);
+    const roomId = uuidv4().slice(0, 8);
     const expiresAt = Date.now() + 60 * 60 * 1000; // 1 час
 
     inviteLinks.set(inviteCode, { roomId, expiresAt });
 
     socket.emit("invite-created", inviteCode);
+    console.log(`🔗 Invite created: ${inviteCode} → ${roomId}`);
   });
 
   socket.on("join-invite", (code) => {
@@ -121,7 +129,7 @@ io.on("connection", (socket) => {
 
     const now = Date.now();
     if (invite.expiresAt < now) {
-      invites.delete(code);
+      inviteLinks.delete(code);
       return socket.emit("invite-error", "Срок действия ссылки истёк.");
     }
 
@@ -130,14 +138,25 @@ io.on("connection", (socket) => {
     userRooms.set(socket.id, { roomId, userId });
 
     socket.emit("room-found", { roomId });
-
     socket.to(roomId).emit("user-online", { userId });
 
-    console.log(`🔗 ${userId} присоединился по ссылке: ${roomId}`);
+    console.log(`🔗 ${userId} joined via invite: ${roomId}`);
+  });
+
+  socket.on("leave-room", (roomId) => {
+    socket.leave(roomId);
   });
 
   socket.on("disconnect", () => {
-    onlineUsers.delete(userId);
+    const sockets = userSockets.get(userId);
+    if (sockets) {
+      sockets.delete(socket.id);
+      if (sockets.size === 0) {
+        userSockets.delete(userId);
+        onlineUsers.delete(userId);
+      }
+    }
+
     const info = userRooms.get(socket.id);
     if (info) {
       const { roomId } = info;
@@ -145,9 +164,12 @@ io.on("connection", (socket) => {
       userRooms.delete(socket.id);
       console.log(`🔴 ${userId} left ${roomId}`);
     }
+
     const idx = waitingUsers.findIndex((u) => u.userId === userId);
     if (idx !== -1) waitingUsers.splice(idx, 1);
   });
 });
 
-server.listen(PORT, () => console.log(`🚀 Server on ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
