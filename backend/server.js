@@ -24,9 +24,24 @@ const onlineUsers = new Set();
 const waitingUsers = [];
 const inviteLinks = new Map();
 
+function broadcastStatusUpdate() {
+  const chattingUsers = new Set();
+  for (const roomInfo of userRooms.values()) {
+    chattingUsers.add(roomInfo.userId);
+  }
+
+  const searchingUsers = waitingUsers.map((u) => u.userId);
+
+  io.emit("status-update", {
+    onlineUsers: Array.from(onlineUsers),
+    chattingUsers: Array.from(chattingUsers),
+    searchingUsers,
+  });
+}
+
 io.on("connection", (socket) => {
   const userId = socket.handshake.auth.userId;
-  console.log(`🟢 Connected: ${userId}`);
+  socket.userId = userId;
 
   if (!userSockets.has(userId)) {
     userSockets.set(userId, new Set());
@@ -34,40 +49,32 @@ io.on("connection", (socket) => {
   }
   userSockets.get(userId).add(socket.id);
 
-  socket.on("request-status", () => {
-    const chattingUsers = new Set();
-    for (const { userId: uid } of userRooms.values()) {
-      chattingUsers.add(uid);
-    }
-
-    const searchingUsers = waitingUsers.map((u) => u.userId);
-
-    socket.emit("status-info", {
-      onlineUsers: Array.from(onlineUsers),
-      chattingUsers: Array.from(chattingUsers),
-      searchingUsers,
-    });
-  });
+  broadcastStatusUpdate();
 
   socket.on("find-room", () => {
     if (waitingUsers.length > 0) {
-      const { socket: peerSocket, userId: peerId } = waitingUsers.shift();
-      const roomId = uuidv4().slice(0, 8);
+      const peer = waitingUsers.shift();
+      if (!peer.socket.connected) {
+        socket.emit("waiting");
+        waitingUsers.push({ socket, userId });
+        return;
+      }
 
+      const roomId = uuidv4().slice(0, 8);
       socket.join(roomId);
-      peerSocket.join(roomId);
+      peer.socket.join(roomId);
 
       userRooms.set(socket.id, { roomId, userId });
-      userRooms.set(peerSocket.id, { roomId, userId: peerId });
+      userRooms.set(peer.socket.id, { roomId, userId: peer.userId });
 
-      socket.emit("room-found", { roomId, peerId });
-      peerSocket.emit("room-found", { roomId, peerId: userId });
+      socket.emit("room-found", { roomId, peerId: peer.userId });
+      peer.socket.emit("room-found", { roomId, peerId: userId });
 
-      console.log(`✅ Match: ${userId} ↔ ${peerId} → ${roomId}`);
+      broadcastStatusUpdate();
     } else {
       waitingUsers.push({ socket, userId });
       socket.emit("waiting");
-      console.log(`⌛ ${userId} waiting`);
+      broadcastStatusUpdate();
     }
   });
 
@@ -78,14 +85,21 @@ io.on("connection", (socket) => {
     const socketsInRoom = io.sockets.adapter.rooms.get(roomId) || new Set();
     const usersInRoom = [];
     for (const sockId of socketsInRoom) {
-      if (sockId !== socket.id) {
-        const info = userRooms.get(sockId);
-        if (info) usersInRoom.push(info.userId);
+      const info = userRooms.get(sockId);
+      if (info) {
+        usersInRoom.push(info.userId);
       }
     }
 
     socket.emit("online-users-in-room", usersInRoom);
     socket.to(roomId).emit("user-online", { userId });
+  });
+
+  socket.on("leave-room", (roomId) => {
+    socket.leave(roomId);
+    socket.to(roomId).emit("user-offline", { userId });
+    userRooms.delete(socket.id);
+    broadcastStatusUpdate();
   });
 
   socket.on("send-message", ({ roomId, message, messageId, senderId }) => {
@@ -107,17 +121,27 @@ io.on("connection", (socket) => {
 
   socket.on("end-chat", (roomId) => {
     io.to(roomId).emit("chat-ended");
+    const room = io.sockets.adapter.rooms.get(roomId);
+    if (room) {
+      room.forEach((socketId) => {
+        const clientSocket = io.sockets.sockets.get(socketId);
+        if (clientSocket) {
+          userRooms.delete(clientSocket.id);
+          clientSocket.leave(roomId);
+        }
+      });
+    }
+    broadcastStatusUpdate();
   });
 
   socket.on("create-invite", () => {
     const inviteCode = uuidv4().slice(0, 8);
     const roomId = uuidv4().slice(0, 8);
-    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 час
+    const expiresAt = Date.now() + 60 * 60 * 1000;
 
     inviteLinks.set(inviteCode, { roomId, expiresAt });
 
     socket.emit("invite-created", inviteCode);
-    console.log(`🔗 Invite created: ${inviteCode} → ${roomId}`);
   });
 
   socket.on("join-invite", (code) => {
@@ -139,34 +163,29 @@ io.on("connection", (socket) => {
 
     socket.emit("room-found", { roomId });
     socket.to(roomId).emit("user-online", { userId });
-
-    console.log(`🔗 ${userId} joined via invite: ${roomId}`);
-  });
-
-  socket.on("leave-room", (roomId) => {
-    socket.leave(roomId);
   });
 
   socket.on("disconnect", () => {
-    const sockets = userSockets.get(userId);
+    const sockets = userSockets.get(socket.userId);
     if (sockets) {
       sockets.delete(socket.id);
       if (sockets.size === 0) {
-        userSockets.delete(userId);
-        onlineUsers.delete(userId);
+        userSockets.delete(socket.userId);
+        onlineUsers.delete(socket.userId);
       }
     }
 
     const info = userRooms.get(socket.id);
     if (info) {
-      const { roomId } = info;
-      socket.to(roomId).emit("user-offline", { userId });
       userRooms.delete(socket.id);
-      console.log(`🔴 ${userId} left ${roomId}`);
     }
 
-    const idx = waitingUsers.findIndex((u) => u.userId === userId);
-    if (idx !== -1) waitingUsers.splice(idx, 1);
+    const idx = waitingUsers.findIndex((u) => u.socket.id === socket.id);
+    if (idx !== -1) {
+      waitingUsers.splice(idx, 1);
+    }
+
+    broadcastStatusUpdate();
   });
 });
 

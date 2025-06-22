@@ -26,7 +26,6 @@
 
         <p v-if="errorMessage" class="text-red-500 h-5">{{ errorMessage }}</p>
       </div>
-
       <div
         class="text-center flex flex-col justify-between w-full md:max-w-xs space-y-6 shadow-2xl bg-white shadow-gray-500/15 border border-black/10 p-10 rounded-lg"
       >
