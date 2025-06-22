@@ -99,7 +99,7 @@ import { useSocket } from '@/composables/useSocket'
 import { Copy, CopyCheck } from 'lucide-vue-next'
 
 const roomIdRef = ref<string>('')
-const { socket, allOnlineUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
+const { socket, allOnlineUsers, chattingUsers, searchingUsers, myId } = useSocket(roomIdRef)
 
 const isSearching = ref(false)
 const isCreatingInvite = ref(false)
@@ -118,7 +118,7 @@ function startSearch() {
 function cancelSearch() {
   isSearching.value = false
   errorMessage.value = ''
-  socket.emit('cancel-search')
+  socket.emit('cancel-search', { userId: myId.value })
 }
 
 function createInvite() {
@@ -130,6 +130,10 @@ function createInvite() {
 }
 
 function clearInvite() {
+  if (inviteLink.value) {
+    const code = inviteLink.value.split('/').pop()
+    if (code) socket.emit('remove-invite', code)
+  }
   inviteLink.value = ''
   inviteError.value = ''
   copied.value = false

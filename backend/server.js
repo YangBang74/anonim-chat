@@ -165,6 +165,21 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-online", { userId });
   });
 
+  socket.on("cancel-search", ({ userId }) => {
+    const index = waitingUsers.findIndex((u) => u.userId === userId);
+    if (index !== -1) {
+      waitingUsers.splice(index, 1);
+      console.log(`⛔ Поиск отменён для ${userId}`);
+    }
+  });
+
+  socket.on("remove-invite", (code) => {
+    if (inviteLinks.has(code)) {
+      inviteLinks.delete(code);
+      console.log(`❌ Приглашение удалено: ${code}`);
+    }
+  });
+
   socket.on("disconnect", () => {
     const sockets = userSockets.get(socket.userId);
     if (sockets) {
