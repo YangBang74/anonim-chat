@@ -76,7 +76,6 @@ export function useSocket(roomIdRef: Ref<string>) {
   }
 
   function endChat() {
-    // localStorage.removeItem('user-id')
     socket.emit('end-chat', roomIdRef.value)
   }
 
@@ -138,14 +137,6 @@ export function useSocket(roomIdRef: Ref<string>) {
       chattingUsers.value = c
       searchingUsers.value = s
     })
-
-    // socket.on('connect', () => {
-    //   socket.emit('request-status')
-    //   if (statusInterval) clearInterval(statusInterval)
-    //   statusInterval = setInterval(() => {
-    //     socket.emit('request-status')
-    //   }, 3000)
-    // })
   })
 
   onBeforeUnmount(() => {
@@ -153,7 +144,6 @@ export function useSocket(roomIdRef: Ref<string>) {
   })
 
   return {
-    // Состояния
     messages: chat.messages,
     myId,
     isTyping,
@@ -163,8 +153,6 @@ export function useSocket(roomIdRef: Ref<string>) {
     chattingUsers,
     searchingUsers,
     socket,
-
-    // Методы
     sendMessage,
     markAsRead,
     endChat,
