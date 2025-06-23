@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import UserForm from '@/components/UserForm.vue'
 import { useSocket } from '@/composables/useSocket'
+import { UserRound } from 'lucide-vue-next'
+import { UserRoundCog } from 'lucide-vue-next'
+import { UserRoundPlus } from 'lucide-vue-next'
 
 const formIsActive = ref<boolean>(false)
 const roomIdRef = ref<string>('')
 const { allOnlineUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
+const isMyDataAvailable = ref<boolean>(false)
+
+onMounted(() => {
+  const stored = localStorage.getItem('userSearchFilters')
+  if (stored) {
+    const parsed = JSON.parse(stored)
+    if (parsed.age && parsed.gender) {
+      isMyDataAvailable.value = true
+    }
+  }
+})
 </script>
 
 <template>
@@ -140,22 +154,30 @@ const { allOnlineUsers, chattingUsers, searchingUsers } = useSocket(roomIdRef)
             </g>
           </svg>
         </RouterLink>
-        <nav class="flex gap-3">
+        <nav class="flex gap-3 items-center">
           <div class="relative">
             <Transition name="fade">
               <UserForm v-if="formIsActive" @submit="formIsActive = false" />
             </Transition>
             <button
               @click="formIsActive = !formIsActive"
-              class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-gray-100 hover:bg-gray-200 transition"
+              class="p-2 my-2 rounded-md text-sm font-medium bg-gray-100 hover:bg-gray-200 transition"
+              :class="{
+                'bg-gray-200': formIsActive,
+                'bg-gray-100': !formIsActive,
+              }"
             >
-              {{ formIsActive ? 'Скрыть форму' : 'Показать форму' }}
+              <Transition name="fade" mode="out-in">
+                <UserRoundPlus v-if="!isMyDataAvailable" />
+                <UserRoundCog v-else-if="formIsActive" />
+                <UserRound v-else />
+              </Transition>
             </button>
           </div>
 
           <RouterLink
             to="/find"
-            class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
+            class="px-4 py-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
           >
             Начать
           </RouterLink>

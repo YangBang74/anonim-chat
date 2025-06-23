@@ -36,6 +36,7 @@ onMounted(() => {
 function submit() {
   saveFormToLocalStorage()
   emit('submit', form.value)
+  window.location.reload()
 }
 
 const age = [
