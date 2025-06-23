@@ -1,85 +1,3 @@
-<template>
-  <section class="my-20">
-    <div class="container">
-      <div class="space-y-10 bg-gray-50 md:max-w-150 mx-auto">
-        <div
-          v-if="!isMyDataAvailable"
-          class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"
-          role="alert"
-        >
-          <span class="font-medium">Ошибка!</span> Ваши данные (возраст и пол) не установлены.
-          Пожалуйста, сначала заполните свой профиль.
-        </div>
-
-        <form @submit.prevent="startSearch" class="space-y-4 bg-white p-6 rounded shadow-md">
-          <div class="text-center space-y-2">
-            <h1 class="text-3xl font-bold">Найти собеседника</h1>
-            <p class="text-gray-600">Выберите параметры для поиска</p>
-          </div>
-
-          <div>
-            <p class="font-bold mb-2">Возраст собеседника</p>
-            <div class="flex gap-2 flex-wrap">
-              <button
-                v-for="ageOption in ageOptions"
-                :key="ageOption.value"
-                @click="options.age = ageOption.value"
-                type="button"
-                :class="[
-                  'px-3 py-2 rounded text-sm',
-                  options.age === ageOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
-                ]"
-              >
-                {{ ageOption.label }}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <p class="font-bold mb-2">Пол собеседника</p>
-            <div class="flex gap-2 flex-wrap">
-              <button
-                v-for="genderOption in genderOptions"
-                :key="genderOption.value"
-                @click="options.gender = genderOption.value"
-                type="button"
-                :class="[
-                  'px-3 py-2 rounded text-sm',
-                  options.gender === genderOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
-                ]"
-              >
-                {{ genderOption.label }}
-              </button>
-            </div>
-          </div>
-
-          <div v-if="!isSearching">
-            <button
-              type="submit"
-              :disabled="!isMyDataAvailable"
-              class="bg-green-600 text-white py-2 px-4 rounded w-full"
-            >
-              Найти собеседника
-            </button>
-          </div>
-          <div v-else>
-            <p class="text-center text-gray-600 animate-pulse">Идёт поиск...</p>
-            <button
-              type="button"
-              @click="cancelSearch"
-              class="mt-2 bg-red-600 text-white py-2 px-4 rounded w-full"
-            >
-              Отменить поиск
-            </button>
-          </div>
-
-          <p v-if="errorMessage" class="text-red-500 text-center">{{ errorMessage }}</p>
-        </form>
-      </div>
-    </div>
-  </section>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -152,6 +70,87 @@ socket.on('error', (msg: string) => {
   isSearching.value = false
 })
 </script>
+<template>
+  <section class="my-20">
+    <div class="container">
+      <div class="space-y-10 bg-gray-50 md:max-w-150 mx-auto">
+        <div
+          v-if="!isMyDataAvailable"
+          class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"
+          role="alert"
+        >
+          <span class="font-medium">Ошибка!</span> Ваши данные (возраст и пол) не установлены.
+          Пожалуйста, сначала заполните свой профиль.
+        </div>
+
+        <form @submit.prevent="startSearch" class="space-y-4 bg-white p-6 rounded shadow-md">
+          <div class="text-center space-y-2">
+            <h1 class="text-3xl font-bold">Найти собеседника</h1>
+            <p class="text-gray-600">Выберите параметры для поиска</p>
+          </div>
+
+          <div>
+            <p class="font-bold mb-2">Возраст собеседника</p>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="(ageOption, i) in ageOptions"
+                :key="i"
+                @click="options.age = ageOption.value"
+                type="button"
+                :class="[
+                  'px-3 py-2 rounded text-sm',
+                  options.age === ageOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                ]"
+              >
+                {{ ageOption.label }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <p class="font-bold mb-2">Пол собеседника</p>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="genderOption in genderOptions"
+                :key="genderOption.value"
+                @click="options.gender = genderOption.value"
+                type="button"
+                :class="[
+                  'px-3 py-2 rounded text-sm',
+                  options.gender === genderOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                ]"
+              >
+                {{ genderOption.label }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="!isSearching">
+            <button
+              type="submit"
+              :disabled="!isMyDataAvailable"
+              class="bg-green-600 text-white py-2 px-4 rounded w-full"
+            >
+              Найти собеседника
+            </button>
+          </div>
+          <div v-else>
+            <p class="text-center text-gray-600 animate-pulse">Идёт поиск...</p>
+            <button
+              type="button"
+              @click="cancelSearch"
+              class="mt-2 bg-red-600 text-white py-2 px-4 rounded w-full"
+            >
+              Отменить поиск
+            </button>
+          </div>
+
+          <p v-if="errorMessage" class="text-red-500 text-center">{{ errorMessage }}</p>
+        </form>
+      </div>
+    </div>
+  </section>
+</template>
 
 <style scoped>
 .fade-enter-active,
