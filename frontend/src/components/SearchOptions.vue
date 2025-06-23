@@ -39,7 +39,7 @@ const gender = [
         <button
           type="button"
           v-for="ageOption in age"
-          :key="ageOption.value"
+          :key="ageOption.label.length"
           @click="options.age = ageOption.value"
           :class="{
             'bg-blue-600 text-white': options.age === ageOption.value,
