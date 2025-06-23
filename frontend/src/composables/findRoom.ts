@@ -8,15 +8,13 @@ export class SocketService {
   private listeners: Map<string, EventCallback[]> = new Map()
 
   constructor() {
-    // Генерация или получение userId
     const userId = this.getOrCreateUserId()
 
     this.socket = io('http://localhost:3000', {
       auth: { userId },
-      transports: ['websocket'], // можно добавить, чтобы избежать polling
+      transports: ['websocket'],
     })
 
-    // Прокидываем события из сокета в локальные подписки
     this.socket.on('room-found', (payload: { roomId: string }) => {
       this.emitLocal('room-found', payload.roomId)
     })

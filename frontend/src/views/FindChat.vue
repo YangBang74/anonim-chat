@@ -97,6 +97,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
 import { Copy, CopyCheck } from 'lucide-vue-next'
+import SearchOptions from '@/components/SearchOptions.vue'
 
 const roomIdRef = ref<string>('')
 const { socket, allOnlineUsers, chattingUsers, searchingUsers, myId } = useSocket(roomIdRef)

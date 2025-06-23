@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import UserForm from '@/components/UserForm.vue'
+
+const formIsActive = ref<boolean>(false)
 </script>
 
 <template>
@@ -134,6 +138,16 @@ import { RouterLink } from 'vue-router'
           </svg>
         </RouterLink>
         <nav class="flex gap-3">
+          <div class="relative">
+            <UserForm v-if="formIsActive" @submit="formIsActive = false" />
+            <button
+              @click="formIsActive = !formIsActive"
+              class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-gray-100 hover:bg-gray-200 transition"
+            >
+              {{ formIsActive ? 'Скрыть форму' : 'Показать форму' }}
+            </button>
+          </div>
+
           <RouterLink
             to="/find"
             class="px-4 py-2 my-2 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition"
