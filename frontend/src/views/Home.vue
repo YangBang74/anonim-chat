@@ -34,7 +34,11 @@ import FriendChat from '@/components/FriendChat.vue'
           </div>
 
           <div class="flex flex-col gap-2 items-center">
-            <RouterLink to="/find">Найти собеседника</RouterLink>
+            <RouterLink
+              to="/find"
+              class="shadow-xl bg-blue-600 text-white rounded-lg w-full py-3 shadow-blue-600/20"
+              >Найти собеседника</RouterLink
+            >
           </div>
         </div>
         <FriendChat />

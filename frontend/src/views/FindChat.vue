@@ -1,68 +1,140 @@
 <template>
-  <div class="flex items-center justify-center flex-col-reverse gap-10 h-screen bg-gray-50">
-    <div class="p-4 border rounded shadow-md max-w-md mx-auto text-left bg-white">
-      <h2 class="text-lg font-semibold mb-2">Статистика</h2>
-      <p>Онлайн: {{ allOnlineUsers.length }}</p>
-      <p>В чатах: {{ chattingUsers.length }}</p>
-      <p>В поиске: {{ searchingUsers.length }}</p>
-    </div>
-
-    <div class="flex flex-col md:flex-row items-stretch justify-center gap-10">
-      <div
-        class="text-center flex flex-col justify-between w-full md:max-w-xs space-y-6 shadow-2xl bg-white shadow-gray-500/15 border border-black/10 p-10 rounded-lg"
-      >
-        <div class="space-y-3">
-          <h1 class="text-3xl font-bold">Анонимный чат</h1>
-          <p class="text-gray-500">Нажмите, чтобы найти случайного собеседника</p>
+  <section class="my-20">
+    <div class="container">
+      <div class="space-y-10 bg-gray-50 md:max-w-150 mx-auto">
+        <div
+          v-if="!isMyDataAvailable"
+          class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"
+          role="alert"
+        >
+          <span class="font-medium">Ошибка!</span> Ваши данные (возраст и пол) не установлены.
+          Пожалуйста, сначала заполните свой профиль.
         </div>
 
-        <div class="flex flex-col gap-2 items-center">
-          <button
-            @click="startSearch"
-            :disabled="isSearching"
-            class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all w-full"
-          >
-            {{ isSearching ? 'Поиск...' : 'Найти собеседника' }}
-          </button>
+        <form @submit.prevent="startSearch" class="space-y-4 bg-white p-6 rounded shadow-md">
+          <div class="text-center space-y-2">
+            <h1 class="text-3xl font-bold">Найти собеседника</h1>
+            <p class="text-gray-600">Выберите параметры для поиска</p>
+          </div>
 
-          <button
-            v-if="isSearching"
-            @click="cancelSearch"
-            class="text-sm text-blue-600 underline hover:text-blue-800 transition"
-          >
-            Отмена
-          </button>
-        </div>
+          <div>
+            <p class="font-bold mb-2">Возраст собеседника</p>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="ageOption in ageOptions"
+                :key="ageOption.value"
+                @click="options.age = ageOption.value"
+                type="button"
+                :class="[
+                  'px-3 py-2 rounded text-sm',
+                  options.age === ageOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                ]"
+              >
+                {{ ageOption.label }}
+              </button>
+            </div>
+          </div>
 
-        <p v-if="errorMessage" class="text-red-500 h-5">{{ errorMessage }}</p>
+          <div>
+            <p class="font-bold mb-2">Пол собеседника</p>
+            <div class="flex gap-2 flex-wrap">
+              <button
+                v-for="genderOption in genderOptions"
+                :key="genderOption.value"
+                @click="options.gender = genderOption.value"
+                type="button"
+                :class="[
+                  'px-3 py-2 rounded text-sm',
+                  options.gender === genderOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                ]"
+              >
+                {{ genderOption.label }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="!isSearching">
+            <button
+              type="submit"
+              :disabled="!isMyDataAvailable"
+              class="bg-green-600 text-white py-2 px-4 rounded w-full"
+            >
+              Найти собеседника
+            </button>
+          </div>
+          <div v-else>
+            <p class="text-center text-gray-600 animate-pulse">Идёт поиск...</p>
+            <button
+              type="button"
+              @click="cancelSearch"
+              class="mt-2 bg-red-600 text-white py-2 px-4 rounded w-full"
+            >
+              Отменить поиск
+            </button>
+          </div>
+
+          <p v-if="errorMessage" class="text-red-500 text-center">{{ errorMessage }}</p>
+        </form>
       </div>
-      <FriendChat />
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSocket } from '@/composables/useSocket'
-import FriendChat from '@/components/FriendChat.vue'
 
-const roomIdRef = ref<string>('')
-const { socket, allOnlineUsers, chattingUsers, searchingUsers, myId } = useSocket(roomIdRef)
+const { socket, myId } = useSocket(ref(''))
+const router = useRouter()
 
 const isSearching = ref(false)
 const errorMessage = ref('')
-const router = useRouter()
+const isMyDataAvailable = ref(false)
+const myData = ref({ age: null, gender: null })
+
+const options = ref({
+  age: null as string | null,
+  gender: 'any' as string,
+})
+
+const ageOptions = [
+  { value: null, label: 'Не важно' },
+  { value: '17', label: 'до 17' },
+  { value: '18-21', label: '18-21' },
+  { value: '22-25', label: '22-25' },
+  { value: '26-35', label: '26-35' },
+  { value: '36+', label: 'старше 36' },
+]
+
+const genderOptions = [
+  { value: 'any', label: 'Не важно' },
+  { value: 'male', label: 'Мужской' },
+  { value: 'female', label: 'Женский' },
+]
+
+onMounted(() => {
+  const stored = localStorage.getItem('userSearchFilters')
+  if (stored) {
+    const parsed = JSON.parse(stored)
+    if (parsed.age && parsed.gender) {
+      myData.value = parsed
+      isMyDataAvailable.value = true
+    }
+  }
+})
 
 function startSearch() {
   errorMessage.value = ''
   isSearching.value = true
-  socket.emit('find-room')
+  socket.emit('find-room', {
+    criteria: options.value,
+    myData: myData.value,
+  })
 }
 
 function cancelSearch() {
   isSearching.value = false
-  errorMessage.value = ''
   socket.emit('cancel-search', { userId: myId.value })
 }
 

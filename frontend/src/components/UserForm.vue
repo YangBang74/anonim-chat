@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 const emit = defineEmits(['submit'])
 
 const form = ref({
@@ -7,7 +7,34 @@ const form = ref({
   gender: '',
 })
 
+const LOCAL_STORAGE_KEY = 'userSearchFilters'
+
+function saveFormToLocalStorage() {
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(form.value))
+}
+
+function loadFormFromLocalStorage() {
+  const savedFilters = localStorage.getItem(LOCAL_STORAGE_KEY)
+  if (savedFilters) {
+    form.value = JSON.parse(savedFilters)
+  }
+}
+
+watch(
+  form,
+  (newVal) => {
+    saveFormToLocalStorage()
+  },
+  { deep: true },
+)
+
+onMounted(() => {
+  loadFormFromLocalStorage()
+  // emit('submit', form.value)
+})
+
 function submit() {
+  saveFormToLocalStorage()
   emit('submit', form.value)
 }
 

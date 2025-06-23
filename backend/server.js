@@ -18,20 +18,35 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-const userRooms = new Map();
 const userSockets = new Map();
 const onlineUsers = new Set();
+const userRooms = new Map();
 const waitingUsers = [];
 const inviteLinks = new Map();
+
+function ageMatches(age, range) {
+  if (!range || range === "any") return true;
+  if (!age) return false;
+
+  const numericAge = parseInt(age); 
+  if (range.includes("+")) {
+    const minAge = parseInt(range, 10);
+    return numericAge >= minAge;
+  }
+  if (range.includes("-")) {
+    const [min, max] = range.split("-").map(Number);
+    return numericAge >= min && numericAge <= max;
+  }
+  const singleAge = parseInt(range, 10);
+  return numericAge <= singleAge;
+}
 
 function broadcastStatusUpdate() {
   const chattingUsers = new Set();
   for (const roomInfo of userRooms.values()) {
     chattingUsers.add(roomInfo.userId);
   }
-
   const searchingUsers = waitingUsers.map((u) => u.userId);
-
   io.emit("status-update", {
     onlineUsers: Array.from(onlineUsers),
     chattingUsers: Array.from(chattingUsers),
@@ -51,31 +66,67 @@ io.on("connection", (socket) => {
 
   broadcastStatusUpdate();
 
-  socket.on("find-room", () => {
-    if (waitingUsers.length > 0) {
-      const peer = waitingUsers.shift();
-      if (!peer.socket.connected) {
-        socket.emit("waiting");
-        waitingUsers.push({ socket, userId });
-        return;
-      }
+  socket.on("find-room", ({ criteria, myData }) => {
+    if (waitingUsers.some((u) => u.userId === userId)) {
+      socket.emit("error", "Вы уже находитесь в поиске.");
+      return;
+    }
 
+    const peerIndex = waitingUsers.findIndex((peer) => {
+      const peerMatches =
+        ageMatches(peer.myData.age, criteria.age) &&
+        (criteria.gender === "any" || peer.myData.gender === criteria.gender);
+
+      const userMatches =
+        ageMatches(myData.age, peer.criteria.age) &&
+        (peer.criteria.gender === "any" ||
+          myData.gender === peer.criteria.gender);
+
+      return peerMatches && userMatches && peer.socket.connected;
+    });
+
+    if (peerIndex !== -1) {
+      const [peer] = waitingUsers.splice(peerIndex, 1);
       const roomId = uuidv4().slice(0, 8);
       socket.join(roomId);
       peer.socket.join(roomId);
-
       userRooms.set(socket.id, { roomId, userId });
       userRooms.set(peer.socket.id, { roomId, userId: peer.userId });
-
       socket.emit("room-found", { roomId, peerId: peer.userId });
       peer.socket.emit("room-found", { roomId, peerId: userId });
-
-      broadcastStatusUpdate();
     } else {
-      waitingUsers.push({ socket, userId });
+      waitingUsers.push({ socket, userId, criteria, myData });
       socket.emit("waiting");
+    }
+
+    broadcastStatusUpdate();
+  });
+
+  socket.on("cancel-search", ({ userId }) => {
+    const index = waitingUsers.findIndex((u) => u.userId === userId);
+    if (index !== -1) {
+      waitingUsers.splice(index, 1);
       broadcastStatusUpdate();
     }
+  });
+
+  socket.on("disconnect", () => {
+    const sockets = userSockets.get(socket.userId);
+    if (sockets) {
+      sockets.delete(socket.id);
+      if (sockets.size === 0) {
+        userSockets.delete(socket.userId);
+        onlineUsers.delete(socket.userId);
+      }
+    }
+    userRooms.delete(socket.id);
+
+    const idx = waitingUsers.findIndex((u) => u.socket.id === socket.id);
+    if (idx !== -1) {
+      waitingUsers.splice(idx, 1);
+    }
+
+    broadcastStatusUpdate();
   });
 
   socket.on("join-room", (roomId) => {
@@ -138,69 +189,31 @@ io.on("connection", (socket) => {
     const inviteCode = uuidv4().slice(0, 8);
     const roomId = uuidv4().slice(0, 8);
     const expiresAt = Date.now() + 60 * 60 * 1000;
-
     inviteLinks.set(inviteCode, { roomId, expiresAt });
-
     socket.emit("invite-created", inviteCode);
   });
 
   socket.on("join-invite", (code) => {
     const invite = inviteLinks.get(code);
-
     if (!invite) {
       return socket.emit("invite-error", "Приглашение не найдено.");
     }
-
     const now = Date.now();
     if (invite.expiresAt < now) {
       inviteLinks.delete(code);
       return socket.emit("invite-error", "Срок действия ссылки истёк.");
     }
-
     const { roomId } = invite;
     socket.join(roomId);
     userRooms.set(socket.id, { roomId, userId });
-
     socket.emit("room-found", { roomId });
     socket.to(roomId).emit("user-online", { userId });
-  });
-
-  socket.on("cancel-search", ({ userId }) => {
-    const index = waitingUsers.findIndex((u) => u.userId === userId);
-    if (index !== -1) {
-      waitingUsers.splice(index, 1);
-      console.log(`⛔ Поиск отменён для ${userId}`);
-    }
   });
 
   socket.on("remove-invite", (code) => {
     if (inviteLinks.has(code)) {
       inviteLinks.delete(code);
-      console.log(`❌ Приглашение удалено: ${code}`);
     }
-  });
-
-  socket.on("disconnect", () => {
-    const sockets = userSockets.get(socket.userId);
-    if (sockets) {
-      sockets.delete(socket.id);
-      if (sockets.size === 0) {
-        userSockets.delete(socket.userId);
-        onlineUsers.delete(socket.userId);
-      }
-    }
-
-    const info = userRooms.get(socket.id);
-    if (info) {
-      userRooms.delete(socket.id);
-    }
-
-    const idx = waitingUsers.findIndex((u) => u.socket.id === socket.id);
-    if (idx !== -1) {
-      waitingUsers.splice(idx, 1);
-    }
-
-    broadcastStatusUpdate();
   });
 });
 
