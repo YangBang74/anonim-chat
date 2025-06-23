@@ -12,7 +12,7 @@ const isMyDataAvailable = ref(false)
 const myData = ref({ age: null, gender: null })
 
 const options = ref({
-  age: null as string | null,
+  age: [] as string[],
   gender: 'any' as string,
 })
 
@@ -69,6 +69,15 @@ socket.on('error', (msg: string) => {
   errorMessage.value = msg
   isSearching.value = false
 })
+
+function toggleAge(value: string | null) {
+  const index = options.value.age.indexOf(value as string)
+  if (index === -1) {
+    options.value.age.push(value as string)
+  } else {
+    options.value.age.splice(index, 1)
+  }
+}
 </script>
 <template>
   <section class="my-20">
@@ -95,11 +104,13 @@ socket.on('error', (msg: string) => {
               <button
                 v-for="(ageOption, i) in ageOptions"
                 :key="i"
-                @click="options.age = ageOption.value"
+                @click="toggleAge(ageOption.value)"
                 type="button"
                 :class="[
                   'px-3 py-2 rounded text-sm',
-                  options.age === ageOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                  options.age.includes(ageOption.value as string)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-200',
                 ]"
               >
                 {{ ageOption.label }}

@@ -24,21 +24,26 @@ const userRooms = new Map();
 const waitingUsers = [];
 const inviteLinks = new Map();
 
-function ageMatches(age, range) {
-  if (!range || range === "any") return true;
-  if (!age) return false;
+function ageMatches(age, ranges) {
+  if (!Array.isArray(ranges) || ranges.length === 0 || ranges.includes(null)) {
+    return true; // "не важно"
+  }
 
-  const numericAge = parseInt(age); 
-  if (range.includes("+")) {
-    const minAge = parseInt(range, 10);
-    return numericAge >= minAge;
-  }
-  if (range.includes("-")) {
-    const [min, max] = range.split("-").map(Number);
-    return numericAge >= min && numericAge <= max;
-  }
-  const singleAge = parseInt(range, 10);
-  return numericAge <= singleAge;
+  const numericAge = parseInt(age);
+  return ranges.some((range) => {
+    if (!range) return true;
+
+    if (range.includes("+")) {
+      const minAge = parseInt(range, 10);
+      return numericAge >= minAge;
+    }
+    if (range.includes("-")) {
+      const [min, max] = range.split("-").map(Number);
+      return numericAge >= min && numericAge <= max;
+    }
+    const singleAge = parseInt(range, 10);
+    return numericAge <= singleAge;
+  });
 }
 
 function broadcastStatusUpdate() {
