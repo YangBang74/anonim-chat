@@ -25,7 +25,7 @@ onMounted(() => {
 
 <template>
   <div class="layout min-h-screen flex flex-col">
-    <header class="border-b border-gray-200 bg-white">
+    <header class="border-b border-gray-200 backdrop-blur-[0.0938rem] absolute top-0 left-0 w-full">
       <div class="container mx-auto px-4 py-4 flex items-center justify-between">
         <RouterLink to="/" class="text-2xl font-semibold w-40 text-gray-800">
           <svg
@@ -161,7 +161,7 @@ onMounted(() => {
             </Transition>
             <button
               @click="formIsActive = !formIsActive"
-              class="p-2 my-2 rounded-md text-sm font-medium bg-gray-100 hover:bg-gray-200 transition"
+              class="p-2 my-2 rounded-md text-sm font-medium bg-gray-200/60 hover:bg-gray-200 transition"
               :class="{
                 'bg-gray-200': formIsActive,
                 'bg-gray-100': !formIsActive,
@@ -186,7 +186,7 @@ onMounted(() => {
     </header>
 
     <main class="flex-1">
-      <slot></slot>
+      <slot class="pt-[3.5625rem]"></slot>
     </main>
     <footer class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
       <div class="container">

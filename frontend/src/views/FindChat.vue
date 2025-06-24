@@ -13,7 +13,7 @@ const myData = ref({ age: null, gender: null })
 
 const options = ref({
   age: [] as string[],
-  gender: 'any' as string,
+  gender: '' as string,
 })
 
 const ageOptions = [
@@ -26,9 +26,9 @@ const ageOptions = [
 ]
 
 const genderOptions = [
-  { value: 'any', label: 'Не важно' },
   { value: 'male', label: 'Мужской' },
   { value: 'female', label: 'Женский' },
+  { value: 'any', label: 'Не важно' },
 ]
 
 onMounted(() => {
@@ -80,9 +80,9 @@ function toggleAge(value: string | null) {
 }
 </script>
 <template>
-  <section class="my-20">
+  <section class="hero py-30">
     <div class="container">
-      <div class="space-y-10 bg-gray-50 md:max-w-150 mx-auto">
+      <div class="space-y-10 p-7 py-10 bg-gray-50 md:max-w-130 mx-auto rounded-lg shadow-lg">
         <div
           v-if="!isMyDataAvailable"
           class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"
@@ -92,7 +92,7 @@ function toggleAge(value: string | null) {
           Пожалуйста, сначала заполните свой профиль.
         </div>
 
-        <form @submit.prevent="startSearch" class="space-y-4 bg-white p-6 rounded shadow-md">
+        <form @submit.prevent="startSearch" class="space-y-4">
           <div class="text-center space-y-2">
             <h1 class="text-3xl font-bold">Найти собеседника</h1>
             <p class="text-gray-600">Выберите параметры для поиска</p>
@@ -106,8 +106,9 @@ function toggleAge(value: string | null) {
                 :key="i"
                 @click="toggleAge(ageOption.value)"
                 type="button"
+                class="sm:w-[calc(33%-0.25rem)] w-[calc(50%-0.25rem)]"
                 :class="[
-                  'px-3 py-2 rounded text-sm',
+                  'py-2 rounded text-sm',
                   options.age.includes(ageOption.value as string)
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-200',
@@ -122,13 +123,16 @@ function toggleAge(value: string | null) {
             <p class="font-bold mb-2">Пол собеседника</p>
             <div class="flex gap-2 flex-wrap">
               <button
-                v-for="genderOption in genderOptions"
+                v-for="(genderOption, index) in genderOptions"
                 :key="genderOption.value"
                 @click="options.gender = genderOption.value"
                 type="button"
                 :class="[
                   'px-3 py-2 rounded text-sm',
                   options.gender === genderOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
+                  index === 2
+                    ? 'w-full sm:w-[calc(33%-0.25rem)]'
+                    : 'w-[calc(50%-0.25rem)] sm:w-[calc(33%-0.25rem)]',
                 ]"
               >
                 {{ genderOption.label }}
@@ -164,6 +168,12 @@ function toggleAge(value: string | null) {
 </template>
 
 <style scoped>
+.hero {
+  background-image: url('@/assets/images/hero-bg.webp');
+  background-size: cover;
+  background-position: center;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;

@@ -17,7 +17,7 @@ button {
 }
 
 .container {
-  max-width: clamp(20rem, 90%, 75rem);
+  max-width: clamp(18.75rem, 90%, 75rem);
   margin-inline: auto;
-  padding: 0 1.25rem;
+  padding: 0 10px;
 }

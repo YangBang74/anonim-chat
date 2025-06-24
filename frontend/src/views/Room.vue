@@ -7,10 +7,8 @@ import MessageInput from '@/components/MessageInput.vue'
 import without from '@/layouts/without.vue'
 
 const route = useRoute()
-// Убедимся, что roomIdRef всегда строка, даже если параметр пуст
 const roomIdRef = ref((route.params.id as string) || '')
 
-// Деструктуризация с исправленными и понятными именами из composable
 const {
   messages,
   sendMessage,
@@ -19,37 +17,30 @@ const {
   notifyTyping,
   isTyping,
   endChat,
-  isChatEnded, // Состояние берется напрямую из composable
-  onlineUsersInRoom, // Пользователи онлайн в текущей комнате
+  isChatEnded,
+  onlineUsersInRoom,
 } = useSocket(roomIdRef)
 
-// Функция для вызова метода `endChat` из composable
 function handleEndChat() {
   endChat()
 }
 
-// Watcher для пометки входящих сообщений как прочитанных
 watch(
   () => (messages.length > 0 ? messages[messages.length - 1] : null),
   (lastMessage) => {
-    // Проверяем, что сообщение существует, оно не от меня и еще не прочитано
     if (!lastMessage || lastMessage.id === myId.value || lastMessage.status === 'read') {
       return
     }
     markAsRead(lastMessage.timestamp)
   },
-  { immediate: true, deep: true }, // deep: true на случай изменения статуса
+  { immediate: true, deep: true }, 
 )
 
-// Computed-свойство для определения ID собеседника
 const otherUserId = computed(() => {
-  // Находим первого пользователя в комнате, который не является мной
   return [...onlineUsersInRoom.value].find((id) => id !== myId.value)
 })
 
-// Computed-свойство для проверки, онлайн ли собеседник
 const isOtherUserOnline = computed(() => {
-  // Проверяем, есть ли в комнате кто-то кроме меня
   return [...onlineUsersInRoom.value].some((id) => id !== myId.value)
 })
 </script>
@@ -100,7 +91,12 @@ const isOtherUserOnline = computed(() => {
 </template>
 
 <style scoped>
-/* Стили для анимации поля ввода */
+.hero {
+  background-image: url('@/assets/images/hero-bg.webp');
+  background-size: cover;
+  background-position: center;
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition:
@@ -114,4 +110,3 @@ const isOtherUserOnline = computed(() => {
   opacity: 0;
 }
 </style>
-```

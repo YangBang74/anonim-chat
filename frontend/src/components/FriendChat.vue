@@ -60,15 +60,11 @@ socket.on('invite-error', (msg: string) => {
     <Transition name="fade" mode="out-in">
       <div v-if="inviteLink" class="flex flex-col gap-2 w-full">
         <div class="flex items-stretch justify-between bg-gray-100 rounded-md">
-          <p class="text-sm text-green-700 break-all mr-2 px-2 py-2">
-            <a
-              :href="inviteLink"
-              target="_blank"
-              class="underline hover:text-green-800 line-clamp-1 overflow-hidden"
-            >
+          <dev class="text-sm text-green-700 break-all mr-2 px-2 py-2">
+            <p class="underline hover:text-green-800 line-clamp-1 overflow-hidden">
               {{ inviteLink }}
-            </a>
-          </p>
+            </p>
+          </dev>
           <button
             @click="copyInviteLink"
             class="bg-gray-300 hover:bg-gray-400 aspect-[1/1] h-full text-gray-800 font-bold py-2 px-2 rounded text-sm"
@@ -77,14 +73,20 @@ socket.on('invite-error', (msg: string) => {
             <CopyCheck v-else />
           </button>
         </div>
-
-        <button
-          @click="clearInvite"
-          class="text-sm text-red-600 underline hover:text-red-800 transition"
-        >
-          Удалить ссылку
-        </button>
-
+        <div class="flex items-center justify-between">
+          <a
+            :href="inviteLink"
+            class="text-sm text-gray-600 underline hover:text-gray-800 transition"
+          >
+            Перейти в комнату
+          </a>
+          <button
+            @click="clearInvite"
+            class="text-sm text-red-600 underline hover:text-red-800 transition"
+          >
+            Удалить ссылку
+          </button>
+        </div>
         <p v-if="inviteError" class="text-red-500">{{ inviteError }}</p>
       </div>
 

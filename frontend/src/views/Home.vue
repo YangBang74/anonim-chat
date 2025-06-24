@@ -3,14 +3,14 @@ import { RouterLink } from 'vue-router'
 import FriendChat from '@/components/FriendChat.vue'
 </script>
 <template>
-  <section>
+  <section class="hero md:py-20 py-15">
     <div class="container">
       <div class="text-center space-y-3 py-20">
-        <h1 class="font-bold text-4xl">
+        <h1 class="font-bold md:text-4xl text-3xl">
           Анонимный чат <br />
           найди собеседника за секунду
         </h1>
-        <p class="text-medium text-xl">Без регистрации. Без логов. 100% анонимно.</p>
+        <p class="text-medium md:text-xl text-lg">Без регистрации. Без логов. 100% анонимно.</p>
         <div class="mt-10">
           <RouterLink
             to="/find"
@@ -46,3 +46,10 @@ import FriendChat from '@/components/FriendChat.vue'
     </div>
   </section>
 </template>
+<style scoped>
+.hero {
+  background-image: url('@/assets/images/hero-bg.webp');
+  background-size: cover;
+  background-position: center;
+}
+</style>
