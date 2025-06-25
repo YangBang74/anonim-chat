@@ -191,7 +191,7 @@ onMounted(() => {
     <footer class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
       <div class="container">
         <div class="flex items-center justify-between w-full">
-          <p>© {{ new Date().getFullYear() }} Анонимный чат</p>
+          <p>© {{ new Date().getFullYear() }} SilentTalk</p>
           <div class="p-4 rounded shadow-md text-left bg-white">
             <h2 class="text-lg font-semibold mb-2">Статистика</h2>
             <p>Онлайн: {{ allOnlineUsers.length }}</p>

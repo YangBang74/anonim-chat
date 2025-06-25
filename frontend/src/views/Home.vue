@@ -97,6 +97,7 @@ const faqCategory2: FAQCategory = {
   </section>
   <section class="my-20">
     <div class="container">
+      <h1 class="text-3xl font-bold text-center mb-10">Чаты в реальном времени</h1>
       <div class="flex flex-col md:flex-row items-stretch justify-center gap-10">
         <div
           class="text-center flex flex-col justify-between w-full md:max-w-xs space-y-6 shadow-2xl bg-white shadow-gray-500/15 border border-black/10 p-10 rounded-lg"
@@ -130,7 +131,7 @@ const faqCategory2: FAQCategory = {
           <div
             class="bg-[#F3F4F6] px-2 md:py-4 py-[0.9375rem] rounded-t-xl border-b border-[#F3F4F6]"
           >
-            <h2 class="text-lg text-[#1E40AF] font-bold">{{ faqCategory1.title }}</h2>
+            <h2 class="text-lg font-bold">{{ faqCategory1.title }}</h2>
           </div>
           <div v-for="(item, idx) in faqCategory1.items" :key="idx">
             <details class="border-b border-[#F3F4F6] group">
@@ -153,7 +154,7 @@ const faqCategory2: FAQCategory = {
                 </svg>
               </summary>
               <div
-                class="p-2 md:mb-2 md:mx-3 mx-[1.375rem] mb-[0.75rem] text-sm bg-[#F4F4F4] rounded-lg border-l-4 border-[#60A5FA]"
+                class="p-2 md:mb-2 md:mx-3 mx-[1.375rem] mb-[0.75rem] text-sm bg-[#F4F4F4] rounded-lg border-l-4 border-gray-700"
               >
                 <p class="text-black">{{ item.answer }}</p>
               </div>
@@ -166,7 +167,7 @@ const faqCategory2: FAQCategory = {
           <div
             class="bg-[#F3F4F6] px-2 md:py-4 py-[0.9375rem] rounded-t-xl border-b border-[#F3F4F6]"
           >
-            <h2 class="text-lg text-[#1E40AF] font-bold">{{ faqCategory2.title }}</h2>
+            <h2 class="text-lg font-bold">{{ faqCategory2.title }}</h2>
           </div>
           <div v-for="(item, idx) in faqCategory2.items" :key="idx">
             <details class="border-b border-[#F3F4F6] group">
@@ -189,7 +190,7 @@ const faqCategory2: FAQCategory = {
                 </svg>
               </summary>
               <div
-                class="p-2 md:mb-2 md:mx-3 mx-[1.375rem] mb-[0.75rem] text-sm bg-[#F4F4F4] rounded-lg border-l-4 border-[#60A5FA]"
+                class="p-2 md:mb-2 md:mx-3 mx-[1.375rem] mb-[0.75rem] text-sm bg-[#F4F4F4] rounded-lg border-l-4 border-gray-700"
               >
                 <p class="text-black">{{ item.answer }}</p>
               </div>
