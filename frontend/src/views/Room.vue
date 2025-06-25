@@ -36,10 +36,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-const otherUserId = computed(() => {
-  return [...onlineUsersInRoom.value].find((id) => id !== myId.value)
-})
-
 const isOtherUserOnline = computed(() => {
   return [...onlineUsersInRoom.value].some((id) => id !== myId.value)
 })

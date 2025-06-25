@@ -22,7 +22,7 @@ function loadFormFromLocalStorage() {
 
 watch(
   form,
-  (newVal) => {
+  () => {
     saveFormToLocalStorage()
   },
   { deep: true },

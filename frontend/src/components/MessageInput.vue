@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
-  onTyping?: () => void
+  onTyping?: () => undefined
   chatIsActive: boolean
 }>()
 

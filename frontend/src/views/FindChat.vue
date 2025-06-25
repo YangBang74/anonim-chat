@@ -97,7 +97,6 @@ function toggleAge(value: string | null) {
             <h1 class="text-3xl font-bold">Найти собеседника</h1>
             <p class="text-gray-600">Выберите параметры для поиска</p>
           </div>
-
           <div>
             <p class="font-bold mb-2">Возраст собеседника</p>
             <div class="flex gap-2 flex-wrap">
@@ -118,7 +117,6 @@ function toggleAge(value: string | null) {
               </button>
             </div>
           </div>
-
           <div>
             <p class="font-bold mb-2">Пол собеседника</p>
             <div class="flex gap-2 flex-wrap">
@@ -139,7 +137,6 @@ function toggleAge(value: string | null) {
               </button>
             </div>
           </div>
-
           <div v-if="!isSearching">
             <button
               type="submit"
@@ -159,8 +156,14 @@ function toggleAge(value: string | null) {
               Отменить поиск
             </button>
           </div>
-
           <p v-if="errorMessage" class="text-red-500 text-center">{{ errorMessage }}</p>
+          <div class="text-center text-sm">
+            Начиная чат вы принимаете
+            <router-link to="/terms" class="text-blue-600">правила использования</router-link> и
+            <router-link to="/privacy" class="text-blue-600"
+              >политику конфиденциальности</router-link
+            >.
+          </div>
         </form>
       </div>
     </div>

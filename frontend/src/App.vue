@@ -3,7 +3,6 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import LayoutDefault from '@/layouts/default.vue'
 import LayoutWithout from '@/layouts/without.vue'
-
 const route = useRoute()
 
 const layout = computed(() => {

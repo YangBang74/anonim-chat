@@ -24,6 +24,18 @@ const routes: RouteRecordRaw[] = [
     props: true,
     meta: { layout: 'default' },
   },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: () => import('@/views/Terms.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: () => import('@/views/Privacy.vue'),
+    meta: { layout: 'default' },
+  },
 ]
 
 const router = createRouter({
