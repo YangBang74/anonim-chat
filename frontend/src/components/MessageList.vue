@@ -44,7 +44,10 @@ function formatTime(timestamp: number): string {
       >
         <div class="whitespace-pre-wrap break-words">{{ msg.text }}</div>
 
-        <div class="flex items-center justify-end mt-1 gap-1 text-[0.6875rem]">
+        <div
+          class="relative flex items-center justify-end gap-1 text-[0.6875rem]"
+          :class="msg.id === myId ? 'right-[-10px]' : 'right-[-5px]'"
+        >
           <span :class="msg.id === myId ? 'text-gray-200' : 'text-gray-500'">
             {{ formatTime(msg.timestamp) }}
           </span>
