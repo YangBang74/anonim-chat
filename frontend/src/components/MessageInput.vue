@@ -24,16 +24,14 @@ function submit() {
 }
 </script>
 <template>
-  <div
-    class="p-2 border-y bg-white border-gray-300 flex shadow fixed bottom-0 w-full container mx-auto"
-  >
+  <div class="px-5 bg-white border border-gray-200 flex sticky bottom-0 w-full mx-auto">
     <input
       v-model="text"
       :disabled="chatIsActive"
       @keyup.enter="submit"
       type="text"
       placeholder="Сообщение…"
-      class="flex-1 rounded- px-3 py-3 my-2 focus:outline-none"
+      class="flex-1 rounded- py-2 my-2 focus:outline-none"
     />
     <Transition>
       <button

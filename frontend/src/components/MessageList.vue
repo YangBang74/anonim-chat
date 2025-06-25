@@ -18,8 +18,18 @@ function scrollToBottom() {
   })
 }
 
-onMounted(scrollToBottom)
-watch(() => props.messages.length, scrollToBottom)
+onMounted(() => {
+  scrollToBottom()
+})
+
+watch(
+  () => props.messages,
+  async () => {
+    await nextTick()
+    scrollToBottom()
+  },
+  { deep: true },
+)
 
 function formatTime(timestamp: number): string {
   const date = new Date(timestamp)
@@ -30,7 +40,7 @@ function formatTime(timestamp: number): string {
 <template>
   <div
     ref="scrollContainer"
-    class="w-full flex-1 overflow-auto p-4 space-y-2 flex flex-col scrollbar-custom"
+    class="w-full flex-1 h-full bg-[linear-gradient(180deg,_rgba(255,255,255,1)_0%,_rgba(233,233,247,1)_100%)] border-x border-gray-200 overflow-auto overflow-y-scroll p-4 space-y-2 flex flex-col scrollbar-custom"
   >
     <template v-for="msg in messages" :key="msg.timestamp + msg.id">
       <div

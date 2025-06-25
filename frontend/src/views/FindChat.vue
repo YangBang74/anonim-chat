@@ -132,7 +132,7 @@ function toggleAge(value: string | null) {
                   options.gender === genderOption.value ? 'bg-blue-600 text-white' : 'bg-gray-200',
                   index === 2
                     ? 'w-full sm:w-[calc(33%-0.25rem)]'
-                    : 'w-[calc(50%-0.25rem)] sm:w-[calc(33%-0.25rem)]',
+                    : 'w-[calc(50%-0.25rem)] sm:w-[calc(33%-0.25rem)] sm:order-1 ',
                 ]"
               >
                 {{ genderOption.label }}

@@ -33,7 +33,7 @@ watch(
     }
     markAsRead(lastMessage.timestamp)
   },
-  { immediate: true, deep: true }, 
+  { immediate: true, deep: true },
 )
 
 const otherUserId = computed(() => {
@@ -46,9 +46,9 @@ const isOtherUserOnline = computed(() => {
 </script>
 
 <template>
-  <without>
-    <div class="shadow-xl py-1 my-auto">
-      <div class="container">
+  <without class="max-w-200 h-screen mx-auto shadow-lg text-sm overflow-hidden">
+    <div class="shadow-xl py-1 my-auto overflow-hidden">
+      <div class="px-5 fixed top-0 w-full max-w-200 border border-gray-200 bg-gray-100 z-10">
         <div class="flex items-center justify-between gap-5">
           <div class="p-2 w-full flex items-center justify-between">
             <div class="flex items-center my-2 gap-4">
@@ -79,8 +79,7 @@ const isOtherUserOnline = computed(() => {
         </div>
       </div>
     </div>
-
-    <div class="flex flex-col h-full container">
+    <div class="flex flex-1 flex-col h-full pt-11">
       <MessageList :messages="messages" :myId="myId" />
 
       <Transition name="fade">
@@ -91,6 +90,9 @@ const isOtherUserOnline = computed(() => {
 </template>
 
 <style scoped>
+body {
+  overflow: hidden;
+}
 .hero {
   background-image: url('@/assets/images/hero-bg.webp');
   background-size: cover;
