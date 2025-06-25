@@ -57,7 +57,11 @@ const faqCategory2: FAQCategory = {
           Анонимный чат <br />
           найди собеседника за секунду
         </h1>
-        <p class="text-medium md:text-xl text-lg">Без регистрации. Без логов. 100% анонимно.</p>
+        <p class="text-gray-700 md:text-xl text-lg leading-relaxed">
+          Никакой регистрации, сбора данных или истории чатов. <br class="hidden md:block" />
+          Просто открой и начни анонимное общение — быстро, безопасно и бесплатно.
+        </p>
+
         <div class="mt-10">
           <RouterLink
             to="/find"
