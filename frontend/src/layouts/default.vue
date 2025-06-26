@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import UserForm from '@/components/UserForm.vue'
 import { useSocket } from '@/composables/useSocket'
-import { UserRound } from 'lucide-vue-next'
+import { Github, UserRound } from 'lucide-vue-next'
 import { UserRoundCog } from 'lucide-vue-next'
 import { UserRoundPlus } from 'lucide-vue-next'
 
@@ -190,10 +190,44 @@ onMounted(() => {
     </main>
     <footer class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
       <div class="container">
-        <div class="flex items-center justify-between w-full">
-          <p>© {{ new Date().getFullYear() }} SilentTalk</p>
-          <div class="p-4 rounded shadow-md text-left bg-white">
-            <h2 class="text-lg font-semibold mb-2">Статистика</h2>
+        <div class="flex items-start pt-2 justify-between w-full">
+          <div class="flex flex-col items-start gap-3">
+            <p>© {{ new Date().getFullYear() }} SilentTalk</p>
+            <nav class="flex items-center justify-start gap-3">
+              <a href="https://github.com/YangBang74" target="_blank">
+                <Github />
+              </a>
+              <a href="https://t.me/itisyang" target="_blank">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 50 50"
+                  width="20"
+                  height="20"
+                  class="color-brand"
+                >
+                  <path
+                    d="M46.137,6.552c-0.75-0.636-1.928-0.727-3.146-0.238l-0.002,0C41.708,6.828,6.728,21.832,5.304,22.445	c-0.259,0.09-2.521,0.934-2.288,2.814c0.208,1.695,2.026,2.397,2.248,2.478l8.893,3.045c0.59,1.964,2.765,9.21,3.246,10.758	c0.3,0.965,0.789,2.233,1.646,2.494c0.752,0.29,1.5,0.025,1.984-0.355l5.437-5.043l8.777,6.845l0.209,0.125	c0.596,0.264,1.167,0.396,1.712,0.396c0.421,0,0.825-0.079,1.211-0.237c1.315-0.54,1.841-1.793,1.896-1.935l6.556-34.077	C47.231,7.933,46.675,7.007,46.137,6.552z M22,32l-3,8l-3-10l23-17L22,32z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </a>
+            </nav>
+            <nav class="flex flex-col text-left gap-1">
+              <router-link to="/terms">Правила использования</router-link>
+              <router-link to="/privacy">Политика конфиденциальности</router-link>
+            </nav>
+          </div>
+          <nav class="flex items-start gap-2">
+            <ul class="text-left space-y-1">
+              <li>
+                <a href="/home">Главная страница</a>
+              </li>
+              <li><a href="/find">Анонимный чат</a></li>
+              <li><a href="/friends">Чат с друзьями</a></li>
+            </ul>
+          </nav>
+          <div class="rounded self-start text-left bg-white">
+            <h2 class="text-lg font-bold mb-1">Статистика</h2>
             <p>Онлайн: {{ allOnlineUsers.length }}</p>
             <p>В чатах: {{ chattingUsers.length }}</p>
             <p>В поиске: {{ searchingUsers.length }}</p>

@@ -10,6 +10,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/FindChat.vue'),
     meta: { layout: 'default' },
   },
+    {
+    path: '/friends',
+    name: 'Chat with Friends',
+    component: () => import('@/views/Friends.vue'),
+    meta: { layout: 'default' },
+  },
   {
     path: '/room/:id',
     name: 'Room',
