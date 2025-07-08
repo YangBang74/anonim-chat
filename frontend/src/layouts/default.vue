@@ -190,7 +190,7 @@ onMounted(() => {
     </main>
     <footer class="border-t border-gray-200 py-4 text-center text-sm text-gray-500">
       <div class="container">
-        <div class="flex items-start pt-2 justify-between w-full">
+        <div class="flex items-start gap-8 flex-wrap pt-2 justify-between w-full">
           <div class="flex flex-col items-start gap-3">
             <p>© {{ new Date().getFullYear() }} SilentTalk</p>
             <nav class="flex items-center justify-start gap-3">
@@ -212,18 +212,22 @@ onMounted(() => {
                 </svg>
               </a>
             </nav>
-            <nav class="flex flex-col text-left gap-1">
-              <router-link to="/terms">Правила использования</router-link>
-              <router-link to="/privacy">Политика конфиденциальности</router-link>
-            </nav>
           </div>
-          <nav class="flex items-start gap-2">
-            <ul class="text-left space-y-1">
+          <nav class="flex items-start gap-8">
+            <ul class="text-left space-y-2">
               <li>
                 <a href="/home">Главная страница</a>
               </li>
               <li><a href="/find">Анонимный чат</a></li>
               <li><a href="/friends">Чат с друзьями</a></li>
+            </ul>
+            <ul class="text-left space-y-2">
+              <li>
+                <router-link to="/terms">Правила использования</router-link>
+              </li>
+              <li>
+                <router-link to="/privacy">Политика конфиденциальности</router-link>
+              </li>             
             </ul>
           </nav>
           <div class="rounded self-start text-left bg-white">
