@@ -17,7 +17,7 @@ export function useSocket(roomIdRef: Ref<string>) {
 
   const myId = ref(getOrCreateUserId())
 
-  const socket: Socket = io('http://anonim-chat-production.up.railway.app:8080', {
+  const socket: Socket = io(undefined, {
     auth: { userId: myId.value },
   })
 
